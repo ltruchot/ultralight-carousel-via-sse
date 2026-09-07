@@ -67,12 +67,39 @@ done
 # every PHP file. Those are the only two changes made to upstream code; the
 # MIT headers are left exactly as they are.
 find "$SDK_DIR" -name '*.php' -print0 | while IFS= read -r -d '' file; do
-	perl -0pi -e 's/\bstarfederation\\datastar\b/HCFD\\Datastar/g' "$file"
+	perl -0pi -e 's/\bstarfederation\\datastar\b/ULCAR\\Datastar/g' "$file"
 	# The guard goes AFTER the namespace declaration, never after `<?php`:
 	# `namespace` has to be the first statement in a file, so a statement
 	# placed above it is a parse error in every one of these files.
 	perl -0pi -e "s{^(namespace [^;]+;\\n)}{\$1\ndefined( 'ABSPATH' ) || exit;\n}m" "$file"
 done
+
+# Four lines get a phpcs:ignore comment, and nothing else changes on them.
+# Plugin Check reports them as errors, and an error blocks the upload form of
+# the plugin directory whether the code is ours or not. Each comment says why
+# the line is safe; the reasons are repeated in UPSTREAM.md.
+annotate() {
+	# annotate <file> <exact line content, regex-quoted by perl> <sniff> <why>
+	local file="$1" needle="$2" sniff="$3" why="$4"
+	grep -qF -- "$needle" "$file" || die "could not find '$needle' in $file -- upstream moved, re-read the diff"
+	perl -pi -e 'BEGIN { $n = shift; $s = shift; $w = shift } if (index($_, $n) >= 0 && !$done) { my ($indent) = /^(\s*)/; $_ = "$indent// phpcs:ignore $s -- $w\n$_"; $done = 1 }' "$needle" "$sniff" "$why" "$file"
+}
+annotate "$SDK_DIR/ServerSentEventGenerator.php" \
+	"\$protocol = \$_SERVER['SERVER_PROTOCOL'] ?? null;" \
+	"WordPress.Security.ValidatedSanitizedInput" \
+	"compared to a literal below and never output, stored or used to build anything."
+annotate "$SDK_DIR/ServerSentEventGenerator.php" \
+	"echo \$output;" \
+	"WordPress.Security.EscapeOutput.OutputNotEscaped" \
+	"this echo IS the SSE frame; escaping happened where the markup was composed, in ULCAR\\Slides."
+annotate "$SDK_DIR/events/PatchElements.php" \
+	"throw new Exception('An invalid value was passed into \`mode\`." \
+	"WordPress.Security.EscapeOutput.ExceptionNotEscaped" \
+	"the message lists the cases of a hard-coded enum; no user input reaches it."
+annotate "$SDK_DIR/events/PatchElements.php" \
+	"throw new Exception('An invalid value was passed into \`namespace\`." \
+	"WordPress.Security.EscapeOutput.ExceptionNotEscaped" \
+	"the message lists the cases of a hard-coded enum; no user input reaches it."
 
 # readSignals() is replaced, not deleted. It reads $_GET and $_SERVER with no
 # guards -- on a request without signals PHP 8 raises "Undefined array key",
@@ -131,7 +158,7 @@ PYEOF
 	printf " * Required only from the SSE endpoint, never at boot: these files use\n"
 	printf " * enums, which are a parse error below PHP 8.1.\n"
 	printf " *\n"
-	printf " * @package HypermediaCarouselForDatastar\n"
+	printf " * @package UltralightCarouselViaSse\n"
 	printf ' */\n\n'
 	printf "defined( 'ABSPATH' ) || exit;\n\n"
 	# Interfaces and traits first, then everything else: no autoloader means
@@ -164,20 +191,24 @@ cat > "$SDK_DIR/UPSTREAM.md" <<EOF
 
 ## What was changed, and nothing else
 
-1. \`namespace starfederation\\datastar\` became \`namespace HCFD\\Datastar\`
+1. \`namespace starfederation\\datastar\` became \`namespace ULCAR\\Datastar\`
    (and the matching \`use\` statements). PHP does not isolate namespaces, so
    two plugins shipping the same unprefixed classes at different versions
    collide — either fatally, or silently, which is worse.
 2. \`defined( 'ABSPATH' ) || exit;\` was added under the opening tag of each
    file, as the plugin directory expects of every PHP file.
-3. \`readSignals()\` was replaced by a stub that throws. The original reads
+3. Four lines carry a \`phpcs:ignore\` comment, each saying why the line is
+   safe (see the table below). Plugin Check reports them as errors, and an
+   error blocks the directory's upload form whether the code is ours or not.
+   The lines themselves are untouched.
+4. \`readSignals()\` was replaced by a stub that throws. The original reads
    \`\$_GET\` and \`\$_SERVER\` with no guards; on a request without signals PHP 8
    raises *Undefined array key*, and with \`WP_DEBUG_DISPLAY\` on that warning
    prints **into the event stream** and makes it unparseable. This plugin reads
    its parameters from \`WP_REST_Request\`, which validates them declaratively.
    A throwing stub rather than a deletion, so the class keeps its shape and a
    future caller gets a sentence instead of a fatal.
-4. \`loader.php\` was generated. There is no Composer autoloader.
+5. \`loader.php\` was generated. There is no Composer autoloader.
 
 The MIT headers are untouched. \`readme.txt\` credits the project.
 
@@ -188,17 +219,20 @@ removed: this plugin emits element and signal patches only, and shipping code th
 never runs only gives a reviewer more to read. Upstream's \`.gitattributes\` is
 removed too — a hidden file inside a plugin is an error for Plugin Check.
 
-## Findings Plugin Check reports here, and why they stand
+## What Plugin Check would report here, and why each line stands
 
-Three come from this library and are inherent to what it does. They are **not**
-patched, because patching vendored code is how a fork starts:
+Three findings come from this library and are inherent to what it does. The
+code is **not** patched, because patching vendored code is how a fork starts;
+each line carries a comment that names the sniff and the reason, which is what
+keeps the directory's upload form from refusing the ZIP. (A fourth group, on
+\`readSignals()\`, disappeared with the stub described above: the method no
+longer reads anything.)
 
 | Where | Finding | Why it stands |
 |---|---|---|
-| \`ServerSentEventGenerator::sendEvent()\` | \`EscapeOutput.OutputNotEscaped\` on \`echo \$output\` | That echo **is** the SSE frame. Escaping happens where the markup is composed, in \`HCFD\\Slides\`, which is the only place that knows what is data and what is markup. |
+| \`ServerSentEventGenerator::sendEvent()\` | \`EscapeOutput.OutputNotEscaped\` on \`echo \$output\` | That echo **is** the SSE frame. Escaping happens where the markup is composed, in \`ULCAR\\Slides\`, which is the only place that knows what is data and what is markup. |
 | \`PatchElements::getMode()\` / \`getNamespace()\` | \`EscapeOutput.ExceptionNotEscaped\` (x2) | Exception messages built from a hard-coded enum. No user input reaches them. |
 | \`ServerSentEventGenerator::headers()\` | \`MissingUnslash\`, \`InputNotSanitized\` on \`\$_SERVER['SERVER_PROTOCOL']\` | Compared against the literal \`'HTTP/1.1'\` to decide whether a \`Connection\` header is legal. The value is never echoed, stored, or used to build anything. |
-| \`ServerSentEventGenerator::readSignals()\` | four \`ValidatedSanitizedInput\` warnings and a nonce warning | **This plugin never calls that method.** It reads \`\$_GET\` and \`\$_SERVER\` without guards; parameters come from \`WP_REST_Request\` instead, which validates them declaratively. |
 
 ## Refreshing
 

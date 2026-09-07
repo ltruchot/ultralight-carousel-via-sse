@@ -1,30 +1,31 @@
 <?php
 /**
- * The plugin's only setting: how many seconds a slide stays on screen.
+ * The plugin's settings: how long a slide stays on screen, which transition
+ * plays between two slides, and how long it takes.
  *
- * @package HypermediaCarouselForDatastar
+ * @package UltralightCarouselViaSse
  */
 
-namespace HCFD;
+namespace ULCAR;
 
 defined( 'ABSPATH' ) || exit;
 
 /**
- * Reads and writes the rotation interval.
+ * Reads and writes the three site-wide settings.
  */
 final class Settings {
 
 	/** Option name. Also hard-coded in uninstall.php, which cannot load this class. */
-	public const OPTION = 'hcfd_settings';
+	public const OPTION = 'ulcar_settings';
 
 	/** Settings group, used by register_setting() and settings_fields(). */
-	private const GROUP = 'hcfd';
+	private const GROUP = 'ulcar';
 
 	/** Slug of the settings page, under Settings. */
-	private const PAGE = 'hcfd';
+	private const PAGE = 'ulcar';
 
 	/** The page's only section. */
-	private const SECTION = 'hcfd_main';
+	private const SECTION = 'ulcar_main';
 
 	/** Shortest interval a human can follow, in seconds. */
 	public const MIN_INTERVAL = 2.5;
@@ -80,7 +81,7 @@ final class Settings {
 		// page exists but nothing on that screen points at it, and the only way
 		// to find it is to already know where it is.
 		add_filter(
-			'plugin_action_links_' . plugin_basename( HCFD_FILE ),
+			'plugin_action_links_' . plugin_basename( ULCAR_FILE ),
 			array( __CLASS__, 'add_settings_link' )
 		);
 	}
@@ -95,7 +96,7 @@ final class Settings {
 		$link = sprintf(
 			'<a href="%s">%s</a>',
 			esc_url( admin_url( 'options-general.php?page=' . self::PAGE ) ),
-			esc_html__( 'Settings', 'hypermedia-carousel-for-datastar' )
+			esc_html__( 'Settings', 'ultralight-carousel-via-sse' )
 		);
 
 		// Prepended, not appended: "Settings" belongs before "Deactivate", which
@@ -125,7 +126,7 @@ final class Settings {
 	 * Clamps the submitted interval into range and says so when it had to.
 	 *
 	 * @param mixed $input Raw value from the settings form.
-	 * @return array<string, int> Sanitised settings.
+	 * @return array{interval: float, transition: string, duration: int} Sanitised settings.
 	 */
 	public static function sanitize( $input ): array {
 		$raw      = is_array( $input ) && isset( $input['interval'] ) ? $input['interval'] : null;
@@ -134,10 +135,10 @@ final class Settings {
 		if ( is_numeric( $raw ) && ( (float) $raw < self::MIN_INTERVAL || (float) $raw > self::MAX_INTERVAL ) ) {
 			add_settings_error(
 				self::OPTION,
-				'hcfd_interval_range',
+				'ulcar_interval_range',
 				sprintf(
 					/* translators: 1: shortest allowed interval, 2: longest allowed interval, both in seconds. */
-					__( 'The rotation interval must be between %1$s and %2$s seconds. Your value was adjusted.', 'hypermedia-carousel-for-datastar' ),
+					__( 'The rotation interval must be between %1$s and %2$s seconds. Your value was adjusted.', 'ultralight-carousel-via-sse' ),
 					self::MIN_INTERVAL,
 					self::MAX_INTERVAL
 				),
@@ -151,10 +152,10 @@ final class Settings {
 			&& ( (int) $raw_duration < self::MIN_DURATION || (int) $raw_duration > self::MAX_DURATION ) ) {
 			add_settings_error(
 				self::OPTION,
-				'hcfd_duration_range',
+				'ulcar_duration_range',
 				sprintf(
 					/* translators: 1: shortest allowed cross-fade, 2: longest allowed cross-fade, both in milliseconds. */
-					__( 'The cross-fade must last between %1$d and %2$d milliseconds. Your value was adjusted.', 'hypermedia-carousel-for-datastar' ),
+					__( 'The cross-fade must last between %1$d and %2$d milliseconds. Your value was adjusted.', 'ultralight-carousel-via-sse' ),
 					self::MIN_DURATION,
 					self::MAX_DURATION
 				),
@@ -206,7 +207,7 @@ final class Settings {
 	 * to the floor, because the floor is a boundary, not a preference.
 	 *
 	 * @param mixed $value Raw value.
-	 * @return int Seconds, within range.
+	 * @return float Seconds, within range, rounded to a tenth.
 	 */
 	private static function to_interval( $value ): float {
 		if ( ! is_numeric( $value ) ) {
@@ -284,8 +285,8 @@ final class Settings {
 	 */
 	public static function add_page(): void {
 		add_options_page(
-			__( 'Hypermedia Carousel', 'hypermedia-carousel-for-datastar' ),
-			__( 'Hypermedia Carousel', 'hypermedia-carousel-for-datastar' ),
+			__( 'Ultralight Carousel', 'ultralight-carousel-via-sse' ),
+			__( 'Ultralight Carousel', 'ultralight-carousel-via-sse' ),
 			'manage_options',
 			self::PAGE,
 			array( __CLASS__, 'render_page' )
@@ -314,30 +315,30 @@ final class Settings {
 		);
 
 		add_settings_field(
-			'hcfd_interval',
-			__( 'Time on screen', 'hypermedia-carousel-for-datastar' ),
+			'ulcar_interval',
+			__( 'Time on screen', 'ultralight-carousel-via-sse' ),
 			array( __CLASS__, 'render_interval_field' ),
 			self::PAGE,
 			self::SECTION,
-			array( 'label_for' => 'hcfd-interval' )
+			array( 'label_for' => 'ulcar-interval' )
 		);
 
 		add_settings_field(
-			'hcfd_transition',
-			__( 'Transition between slides', 'hypermedia-carousel-for-datastar' ),
+			'ulcar_transition',
+			__( 'Transition between slides', 'ultralight-carousel-via-sse' ),
 			array( __CLASS__, 'render_transition_field' ),
 			self::PAGE,
 			self::SECTION,
-			array( 'label_for' => 'hcfd-transition' )
+			array( 'label_for' => 'ulcar-transition' )
 		);
 
 		add_settings_field(
-			'hcfd_duration',
-			__( 'Transition length', 'hypermedia-carousel-for-datastar' ),
+			'ulcar_duration',
+			__( 'Transition length', 'ultralight-carousel-via-sse' ),
 			array( __CLASS__, 'render_duration_field' ),
 			self::PAGE,
 			self::SECTION,
-			array( 'label_for' => 'hcfd-duration' )
+			array( 'label_for' => 'ulcar-duration' )
 		);
 	}
 
@@ -347,7 +348,7 @@ final class Settings {
 	public static function render_section(): void {
 		?>
 		<p>
-			<?php esc_html_e( 'Pick the images inside the Hypermedia Carousel block. This page holds the one setting shared by every carousel on the site.', 'hypermedia-carousel-for-datastar' ); ?>
+			<?php esc_html_e( 'Images are picked in the block itself. These settings apply to every carousel on the site.', 'ultralight-carousel-via-sse' ); ?>
 		</p>
 		<?php
 	}
@@ -359,7 +360,7 @@ final class Settings {
 		?>
 		<input
 			type="number"
-			id="hcfd-interval"
+			id="ulcar-interval"
 			name="<?php echo esc_attr( self::OPTION ); ?>[interval]"
 			value="<?php echo esc_attr( (string) self::interval() ); ?>"
 			min="<?php echo esc_attr( (string) self::MIN_INTERVAL ); ?>"
@@ -368,13 +369,13 @@ final class Settings {
 			required
 			class="small-text"
 		>
-		<?php echo ' ' . esc_html__( 's', 'hypermedia-carousel-for-datastar' ); ?>
+		<?php echo ' ' . esc_html__( 's', 'ultralight-carousel-via-sse' ); ?>
 		<p class="description">
 			<?php
 			echo esc_html(
 				sprintf(
 					/* translators: 1: shortest allowed interval, 2: longest allowed interval, both in seconds. */
-					__( 'Between %1$s and %2$s seconds, by halves. A carousel of a single image never rotates, whatever this says.', 'hypermedia-carousel-for-datastar' ),
+					__( 'Between %1$s and %2$s seconds, in half-second steps. A carousel with a single image never rotates.', 'ultralight-carousel-via-sse' ),
 					self::MIN_INTERVAL,
 					self::MAX_INTERVAL
 				)
@@ -391,7 +392,7 @@ final class Settings {
 		?>
 		<input
 			type="number"
-			id="hcfd-duration"
+			id="ulcar-duration"
 			name="<?php echo esc_attr( self::OPTION ); ?>[duration]"
 			value="<?php echo esc_attr( (string) self::duration() ); ?>"
 			min="<?php echo esc_attr( (string) self::MIN_DURATION ); ?>"
@@ -400,13 +401,13 @@ final class Settings {
 			required
 			class="small-text"
 		>
-		<?php echo ' ' . esc_html__( 'ms', 'hypermedia-carousel-for-datastar' ); ?>
+		<?php echo ' ' . esc_html__( 'ms', 'ultralight-carousel-via-sse' ); ?>
 		<p class="description">
 			<?php
 			echo esc_html(
 				sprintf(
 					/* translators: 1: shortest allowed cross-fade, 2: longest allowed cross-fade, both in milliseconds. */
-					__( 'Between %1$d and %2$d milliseconds. Ignored when the transition is off.', 'hypermedia-carousel-for-datastar' ),
+					__( 'Between %1$d and %2$d milliseconds. Ignored when the transition is off.', 'ultralight-carousel-via-sse' ),
 					self::MIN_DURATION,
 					self::MAX_DURATION
 				)
@@ -414,7 +415,7 @@ final class Settings {
 			?>
 		</p>
 		<p class="description">
-			<?php esc_html_e( 'A page already in a cache keeps the length it was rendered with, so clear the cache after changing this.', 'hypermedia-carousel-for-datastar' ); ?>
+			<?php esc_html_e( 'Clear your page cache after changing this: cached pages keep the old length.', 'ultralight-carousel-via-sse' ); ?>
 		</p>
 		<?php
 	}
@@ -424,12 +425,12 @@ final class Settings {
 	 */
 	public static function render_transition_field(): void {
 		$labels  = array(
-			'fade' => __( 'Cross-fade — one slide fades into the next', 'hypermedia-carousel-for-datastar' ),
-			'none' => __( 'None — the slide is simply replaced', 'hypermedia-carousel-for-datastar' ),
+			'fade' => __( 'Cross-fade', 'ultralight-carousel-via-sse' ),
+			'none' => __( 'None, the image just switches', 'ultralight-carousel-via-sse' ),
 		);
 		$current = self::transition();
 		?>
-		<select id="hcfd-transition" name="<?php echo esc_attr( self::OPTION ); ?>[transition]">
+		<select id="ulcar-transition" name="<?php echo esc_attr( self::OPTION ); ?>[transition]">
 			<?php foreach ( self::TRANSITIONS as $transition ) : ?>
 				<option value="<?php echo esc_attr( $transition ); ?>" <?php selected( $transition, $current ); ?>>
 					<?php echo esc_html( $labels[ $transition ] ?? $transition ); ?>
@@ -437,7 +438,7 @@ final class Settings {
 			<?php endforeach; ?>
 		</select>
 		<p class="description">
-			<?php esc_html_e( 'Visitors who asked their system for reduced motion never get a transition, whatever this says.', 'hypermedia-carousel-for-datastar' ); ?>
+			<?php esc_html_e( 'Visitors who asked their system for reduced motion never get a transition.', 'ultralight-carousel-via-sse' ); ?>
 		</p>
 		<?php
 	}

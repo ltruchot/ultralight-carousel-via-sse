@@ -1,6 +1,6 @@
 <?php
 
-namespace HCFD\Datastar\enums;
+namespace ULCAR\Datastar\enums;
 
 defined( 'ABSPATH' ) || exit;
 

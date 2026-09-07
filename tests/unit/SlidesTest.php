@@ -2,20 +2,20 @@
 /**
  * Unit tests for the slide source of truth.
  *
- * @package HypermediaCarouselForDatastar
+ * @package UltralightCarouselViaSse
  */
 
 declare(strict_types=1);
 
-namespace HCFD\Tests;
+namespace ULCAR\Tests;
 
 use Brain\Monkey;
 use Brain\Monkey\Functions;
-use HCFD\Slides;
+use ULCAR\Slides;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers \HCFD\Slides
+ * @covers \ULCAR\Slides
  */
 final class SlidesTest extends TestCase {
 
@@ -28,6 +28,7 @@ final class SlidesTest extends TestCase {
 		Functions\when( 'esc_attr__' )->returnArg( 1 );
 		Functions\when( 'esc_attr' )->alias( static fn( $v ) => htmlspecialchars( (string) $v, ENT_QUOTES ) );
 		Functions\when( 'wp_salt' )->justReturn( 'a-salt-that-is-not-a-real-one' );
+		Functions\when( 'get_current_blog_id' )->justReturn( 1 );
 	}
 
 	protected function tearDown(): void {
@@ -67,16 +68,20 @@ final class SlidesTest extends TestCase {
 				10 => array(),                              // fine
 				11 => array( 'mime' => 'application/pdf' ), // a PDF dropped into a gallery
 				12 => array( 'type' => 'page' ),            // not an attachment at all
-				13 => array( 'status' => 'trash' ),         // parent went to the trash
+				13 => array( 'status' => 'trash' ),         // the attachment itself was trashed
 				14 => array( 'mime' => 'video/mp4' ),
 				15 => array(),                              // fine
+				16 => array( 'status' => 'private' ),       // an attachment is never private itself...
+				17 => array( 'status' => 'draft' ),         // ...nor a draft: only `inherit` is real
+				18 => array( 'status' => 'future' ),
+				19 => array( 'mime' => 'image/svg+xml' ),   // an image as far as the library is concerned
 			)
 		);
 
 		// 99 does not exist; 0 and the string are not ids at all.
 		$this->assertSame(
-			array( 10, 15 ),
-			Slides::sanitize_ids( array( 10, 11, 12, 13, 14, 99, 0, 'nope', 15 ) )
+			array( 10, 15, 19 ),
+			Slides::sanitize_ids( array( 10, 11, 12, 13, 14, 99, 0, 'nope', 15, 16, 17, 18, 19 ) )
 		);
 	}
 
@@ -137,7 +142,7 @@ final class SlidesTest extends TestCase {
 		// selector; a generator that drifted from it would make every carousel
 		// answer 400, or worse, open the selector up.
 		$this->assertMatchesRegularExpression(
-			'/^hcfd-[a-f0-9]{12}$/',
+			'/^ulcar-[a-f0-9]{12}$/',
 			Slides::dom_id( array( 1, 2, 3 ), 'large', 0 )
 		);
 	}
@@ -171,22 +176,22 @@ final class SlidesTest extends TestCase {
 	}
 
 	public function test_the_signal_path_is_a_valid_javascript_identifier_path(): void {
-		// A hex hash can start with a digit, and `$hcfd.0a1b2c.view` is a syntax
+		// A hex hash can start with a digit, and `$ulcar.0a1b2c.view` is a syntax
 		// error inside a Datastar expression -- one that fails silently, since
 		// an expression that will not compile is simply ignored.
 		for ( $instance = 0; $instance < 200; $instance++ ) {
 			$signal = Slides::signal_key( Slides::dom_id( array( 1 ), 'large', $instance ) );
-			$this->assertMatchesRegularExpression( '/^hcfd\.[A-Za-z_$][A-Za-z0-9_$]*$/', $signal );
+			$this->assertMatchesRegularExpression( '/^ulcar\.[A-Za-z_$][A-Za-z0-9_$]*$/', $signal );
 		}
 	}
 
 	// -- the token ---------------------------------------------------------
 
 	public function test_a_token_this_site_issued_is_accepted(): void {
-		$token = Slides::token( '1,2,3', 'large', 'hcfd-abcdef012345' );
+		$token = Slides::token( '1,2,3', 'large', 'ulcar-abcdef012345' );
 
 		$this->assertMatchesRegularExpression( '/^[a-f0-9]{32}$/', $token );
-		$this->assertTrue( Slides::verify_token( '1,2,3', 'large', 'hcfd-abcdef012345', $token ) );
+		$this->assertTrue( Slides::verify_token( '1,2,3', 'large', 'ulcar-abcdef012345', $token ) );
 	}
 
 	/**
@@ -195,24 +200,43 @@ final class SlidesTest extends TestCase {
 	public function test_any_tampering_is_rejected( string $ids, string $size, string $target ): void {
 		// Without this, the route is an enumeration oracle over the whole media
 		// library -- drafts and unattached uploads included.
-		$token = Slides::token( '1,2,3', 'large', 'hcfd-abcdef012345' );
+		$token = Slides::token( '1,2,3', 'large', 'ulcar-abcdef012345' );
 
 		$this->assertFalse( Slides::verify_token( $ids, $size, $target, $token ) );
 	}
 
 	public static function provide_tampered_requests(): array {
 		return array(
-			'un id ajoute'    => array( '1,2,3,4', 'large', 'hcfd-abcdef012345' ),
-			'un id retire'    => array( '1,2', 'large', 'hcfd-abcdef012345' ),
-			'ordre change'    => array( '3,2,1', 'large', 'hcfd-abcdef012345' ),
-			'taille changee'  => array( '1,2,3', 'full', 'hcfd-abcdef012345' ),
-			'cible changee'   => array( '1,2,3', 'large', 'hcfd-000000000000' ),
-			'separateur ruse' => array( '1,2|large|hcfd-abcdef012345,3', 'large', 'hcfd-abcdef012345' ),
+			'un id ajoute'    => array( '1,2,3,4', 'large', 'ulcar-abcdef012345' ),
+			'un id retire'    => array( '1,2', 'large', 'ulcar-abcdef012345' ),
+			'ordre change'    => array( '3,2,1', 'large', 'ulcar-abcdef012345' ),
+			'taille changee'  => array( '1,2,3', 'full', 'ulcar-abcdef012345' ),
+			'cible changee'   => array( '1,2,3', 'large', 'ulcar-000000000000' ),
+			'separateur ruse' => array( '1,2|large|ulcar-abcdef012345,3', 'large', 'ulcar-abcdef012345' ),
 		);
 	}
 
 	public function test_an_empty_token_is_rejected(): void {
-		$this->assertFalse( Slides::verify_token( '1', 'large', 'hcfd-abcdef012345', '' ) );
+		$this->assertFalse( Slides::verify_token( '1', 'large', 'ulcar-abcdef012345', '' ) );
+	}
+
+	public function test_a_token_from_another_site_of_the_network_is_rejected(): void {
+		// Every site of a multisite network shares the secret wp_salt() derives
+		// from, so the blog id has to be in the message or a token minted on
+		// one site would open the same ids everywhere.
+		$token = Slides::token( '1,2,3', 'large', 'ulcar-abcdef012345' );
+
+		Functions\when( 'get_current_blog_id' )->justReturn( 2 );
+
+		$this->assertFalse( Slides::verify_token( '1,2,3', 'large', 'ulcar-abcdef012345', $token ) );
+	}
+
+	public function test_a_token_depends_on_the_secret_and_not_only_on_the_message(): void {
+		$token = Slides::token( '1,2,3', 'large', 'ulcar-abcdef012345' );
+
+		Functions\when( 'wp_salt' )->justReturn( 'another-secret' );
+
+		$this->assertFalse( Slides::verify_token( '1,2,3', 'large', 'ulcar-abcdef012345', $token ) );
 	}
 
 	// -- rendering ---------------------------------------------------------
@@ -235,7 +259,7 @@ final class SlidesTest extends TestCase {
 	public function test_the_first_slide_is_protected_from_deferred_loading(): void {
 		$this->given_image_renderer();
 
-		$html = Slides::render_slide( 42, 'large', 0, 3, 'hcfd.kabc' );
+		$html = Slides::render_slide( 42, 'large', 0, 3, 'ulcar.kabc' );
 
 		// It is almost always the LCP element. A lazy-loading plugin that
 		// deferred it would undo the entire point of the plugin.
@@ -248,7 +272,7 @@ final class SlidesTest extends TestCase {
 	public function test_later_slides_are_not_given_that_treatment(): void {
 		$this->given_image_renderer();
 
-		$html = Slides::render_slide( 42, 'large', 2, 3, 'hcfd.kabc' );
+		$html = Slides::render_slide( 42, 'large', 2, 3, 'ulcar.kabc' );
 
 		$this->assertStringNotContainsString( 'fetchpriority', $html );
 		$this->assertStringNotContainsString( 'skip-lazy', $html );
@@ -257,19 +281,19 @@ final class SlidesTest extends TestCase {
 	public function test_only_the_first_slide_starts_visible(): void {
 		$this->given_image_renderer();
 
-		$this->assertStringNotContainsString( ' hidden', Slides::render_slide( 1, 'large', 0, 3, 'hcfd.kabc' ) );
-		$this->assertStringContainsString( ' hidden', Slides::render_slide( 2, 'large', 1, 3, 'hcfd.kabc' ) );
+		$this->assertStringNotContainsString( ' hidden', Slides::render_slide( 1, 'large', 0, 3, 'ulcar.kabc' ) );
+		$this->assertStringContainsString( ' hidden', Slides::render_slide( 2, 'large', 1, 3, 'ulcar.kabc' ) );
 	}
 
 	public function test_a_hidden_slide_is_hidden_by_the_attribute_not_by_opacity(): void {
 		$this->given_image_renderer();
 
-		$html = Slides::render_slide( 2, 'large', 1, 3, 'hcfd.kabc' );
+		$html = Slides::render_slide( 2, 'large', 1, 3, 'ulcar.kabc' );
 
 		// An opacity-0 slide stays focusable and stays in the accessibility
 		// tree: a screen reader would read every slide and the tab order would
 		// wander into what nobody can see.
-		$this->assertStringContainsString( 'data-attr:hidden="$hcfd.kabc.view !== 1"', $html );
+		$this->assertStringContainsString( 'data-attr:hidden="$ulcar.kabc.view !== 1"', $html );
 		$this->assertStringNotContainsString( 'opacity', $html );
 	}
 
@@ -301,11 +325,11 @@ final class SlidesTest extends TestCase {
 	public function test_render_slides_can_start_after_the_first(): void {
 		$this->given_image_renderer();
 
-		$html = Slides::render_slides( array( 10, 20, 30 ), 'large', 1, 'hcfd.kabc' );
+		$html = Slides::render_slides( array( 10, 20, 30 ), 'large', 1, 'ulcar.kabc' );
 
 		$this->assertStringNotContainsString( 'data-id="10"', $html );
 		$this->assertStringContainsString( 'data-id="20"', $html );
 		$this->assertStringContainsString( 'data-id="30"', $html );
-		$this->assertSame( 2, substr_count( $html, 'class="hcfd-slide"' ) );
+		$this->assertSame( 2, substr_count( $html, 'class="ulcar-slide"' ) );
 	}
 }

@@ -7,9 +7,16 @@ what it measures is what a visitor gets.
 
 ```sh
 npm install
-npx playwright install chromium
-BASE_URL=http://localhost:8888 npm test
+npx playwright install chromium firefox
+BASE_URL=http://localhost:8888 npm test        # Chromium and Firefox
+BASE_URL=http://localhost:8888 npm run test:all # the same, plus WebKit
 ```
+
+`test:all` runs the whole suite inside the official Playwright image, because
+WebKit needs three system libraries the other two engines do without and
+installing those takes root. The image tag in `package.json` is pinned to the
+exact `@playwright/test` version, and it has to stay that way: browsers in the
+container are the ones that version expects.
 
 `BASE_URL` is **required and has no default**. A runner that falls back to some
 address when the variable is missing will one day measure a site nobody meant to
@@ -39,4 +46,5 @@ catalogue it made up.
 |---|---|
 | `tests/carousel.spec.ts` | One image ships, the rest arrive in one burst, the rotation runs, and the shapes with zero, one and two carousels behave. |
 | `tests/security.spec.ts` | The single channel accepts what it declared and nothing else: forged signatures, malformed parameters, other methods, other origins, undeclared parameters, and no third-party request. |
-| `tests/accessibility.spec.ts` | WCAG 2.2.2 and its neighbours — including a test that deliberately breaks the page to prove axe is looking. |
+| `tests/accessibility.spec.ts` | WCAG 2.2.2 and its neighbours, including a test that deliberately breaks the page to prove axe is looking. |
+| `tests/diagnostics.spec.ts` | What the page does when the burst goes wrong: the request carries no signals and is not re-issued when the tab shows; an empty burst is not reported as a failure; a refused one is reported with its status. The stream is replaced on the way in so each failure is the exact one under test. |

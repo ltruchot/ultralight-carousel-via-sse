@@ -28,7 +28,7 @@ test.describe( 'the one channel', () => {
 			'an id removed': tamper( url, `ids=${ ids.join( ',' ) }`, `ids=${ ids.slice( 0, -1 ).join( ',' ) }` ),
 			'the order changed': tamper( url, `ids=${ ids.join( ',' ) }`, `ids=${ [ ...ids ].reverse().join( ',' ) }` ),
 			'another size': tamper( url, 'size=large', 'size=full' ),
-			'another target': url.replace( /target=hcfd-[a-f0-9]{12}/, 'target=hcfd-000000000000' ),
+			'another target': url.replace( /target=ulcar-[a-f0-9]{12}/, 'target=ulcar-000000000000' ),
 			'one character of the token': url.replace( /token=([a-f0-9]{31})[a-f0-9]/, ( _m, head ) => `token=${ head }0` ),
 		};
 
@@ -47,8 +47,8 @@ test.describe( 'the one channel', () => {
 			// The target is interpolated into the CSS selector of a patch.
 			// Anything looser than the pattern would let a caller choose where
 			// the site injects markup.
-			'a target that is a selector': url.replace( /target=hcfd-[a-f0-9]{12}/, 'target=body' ),
-			'a target with a wildcard': url.replace( /target=hcfd-[a-f0-9]{12}/, 'target=hcfd-%2A' ),
+			'a target that is a selector': url.replace( /target=ulcar-[a-f0-9]{12}/, 'target=body' ),
+			'a target with a wildcard': url.replace( /target=ulcar-[a-f0-9]{12}/, 'target=ulcar-%2A' ),
 			'a size outside the list': url.replace( 'size=large', 'size=../../../etc/passwd' ),
 			'ids that are not numbers': url.replace( /ids=[^&]+/, 'ids=1,2;DROP' ),
 			'ids as an array': url.replace( /ids=[^&]+/, 'ids[]=1' ),
@@ -144,7 +144,7 @@ test.describe( 'the one channel', () => {
 
 		page.on( 'request', ( r ) => {
 			const url = r.url();
-			if ( ! /hcfd|datastar/i.test( url ) ) {
+			if ( ! /ulcar|datastar/i.test( url ) ) {
 				return; // Requests from the theme and other plugins are not ours to judge.
 			}
 			if ( ! url.startsWith( origin ) ) {
@@ -162,11 +162,11 @@ test.describe( 'the one channel', () => {
 	test( 'an author cannot inject markup through the accessible name', async ( { page } ) => {
 		await page.goto( `/${ FIXTURES.hostile.slug }/` );
 
-		const label = await page.getAttribute( '.hcfd-carousel', 'aria-label' );
+		const label = await page.getAttribute( '.ulcar-carousel', 'aria-label' );
 
 		// The value survives as text, and has not become another attribute.
 		expect( label ).toContain( 'onload' );
-		expect( await page.getAttribute( '.hcfd-carousel', 'onload' ) ).toBeNull();
+		expect( await page.getAttribute( '.ulcar-carousel', 'onload' ) ).toBeNull();
 		expect( await page.evaluate( () => ( window as never as { alerted?: boolean } ).alerted ) ).toBeUndefined();
 	} );
 } );

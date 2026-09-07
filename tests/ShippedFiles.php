@@ -7,12 +7,12 @@
  * reported that the Datastar source map would not ship, when it does. Logic
  * that has to be right in two places is wrong in one of them soon enough.
  *
- * @package HypermediaCarouselForDatastar
+ * @package UltralightCarouselViaSse
  */
 
 declare(strict_types=1);
 
-namespace HCFD\Tests;
+namespace ULCAR\Tests;
 
 /**
  * Reads .distignore the way rsync does.
@@ -52,7 +52,12 @@ trait ShippedFiles {
 
 		$excluded = static function ( string $relative ) use ( $anchored, $floating ): bool {
 			foreach ( $anchored as $pattern ) {
-				if ( $relative === $pattern || str_starts_with( $relative, $pattern . '/' ) ) {
+				// fnmatch() for the one anchored wildcard, `/*.zip`: a ZIP built
+				// at the root must not ship inside the next one. FNM_PATHNAME
+				// keeps `*` from crossing a slash, as it does not in rsync.
+				if ( $relative === $pattern
+					|| str_starts_with( $relative, $pattern . '/' )
+					|| fnmatch( $pattern, $relative, FNM_PATHNAME ) ) {
 					return true;
 				}
 			}

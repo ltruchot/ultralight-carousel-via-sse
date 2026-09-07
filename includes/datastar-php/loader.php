@@ -6,7 +6,7 @@
  * Required only from the SSE endpoint, never at boot: these files use
  * enums, which are a parse error below PHP 8.1.
  *
- * @package HypermediaCarouselForDatastar
+ * @package UltralightCarouselViaSse
  */
 
 defined( 'ABSPATH' ) || exit;

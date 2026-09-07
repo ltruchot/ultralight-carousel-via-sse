@@ -2,10 +2,10 @@
 /**
  * Registers the carousel block.
  *
- * @package HypermediaCarouselForDatastar
+ * @package UltralightCarouselViaSse
  */
 
-namespace HCFD;
+namespace ULCAR;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -38,7 +38,7 @@ final class Block {
 	 * (has_block sees neither template parts nor synced patterns).
 	 */
 	public static function register(): void {
-		register_block_type_from_metadata( HCFD_PATH . 'blocks/carousel' );
+		register_block_type_from_metadata( ULCAR_PATH . 'blocks/carousel' );
 
 		/*
 		 * The editor script calls wp.i18n; without this its strings stay in
@@ -60,9 +60,9 @@ final class Block {
 		 * PHP and nothing else.
 		 */
 		wp_set_script_translations(
-			'hcfd-carousel-editor-script',
-			'hypermedia-carousel-for-datastar',
-			HCFD_PATH . 'languages'
+			'ulcar-carousel-editor-script',
+			'ultralight-carousel-via-sse',
+			ULCAR_PATH . 'languages'
 		);
 	}
 

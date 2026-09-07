@@ -10,13 +10,13 @@
  * here rotates.
  */
 
-.wp-block-hcfd-carousel.hcfd--preview .hcfd-track {
+.wp-block-ulcar-carousel.ulcar--preview .ulcar-track {
 	display: grid;
 	grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
 	gap: 8px;
 }
 
-.wp-block-hcfd-carousel.hcfd--preview .hcfd-slide img {
+.wp-block-ulcar-carousel.ulcar--preview .ulcar-slide img {
 	display: block;
 	width: 100%;
 	height: auto;

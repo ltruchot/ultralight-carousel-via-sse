@@ -7,10 +7,10 @@
  * PHP-FPM pins one worker per open connection, so a stream held open for the
  * length of a visit would trade the whole site's capacity for a slideshow.
  *
- * @package HypermediaCarouselForDatastar
+ * @package UltralightCarouselViaSse
  */
 
-namespace HCFD;
+namespace ULCAR;
 
 use WP_Error;
 use WP_REST_Request;
@@ -25,7 +25,7 @@ defined( 'ABSPATH' ) || exit;
 final class Sse_Endpoint {
 
 	/** REST namespace. */
-	private const REST_NAMESPACE = 'hcfd/v1';
+	private const REST_NAMESPACE = 'ulcar/v1';
 
 	/** REST route. */
 	private const ROUTE = '/slides';
@@ -75,7 +75,7 @@ final class Sse_Endpoint {
 						 * site inject markup anywhere in the document.
 						 */
 						'validate_callback' => static function ( $value ) {
-							return (bool) preg_match( '/^hcfd-[a-f0-9]{12}$/', (string) $value );
+							return (bool) preg_match( '/^ulcar-[a-f0-9]{12}$/', (string) $value );
 						},
 					),
 					'token'  => array(
@@ -116,8 +116,8 @@ final class Sse_Endpoint {
 
 		if ( ! $valid ) {
 			return new WP_Error(
-				'hcfd_bad_token',
-				__( 'This carousel request was not issued by this site.', 'hypermedia-carousel-for-datastar' ),
+				'ulcar_bad_token',
+				__( 'This carousel request was not issued by this site.', 'ultralight-carousel-via-sse' ),
 				array( 'status' => 403 )
 			);
 		}
@@ -160,7 +160,7 @@ final class Sse_Endpoint {
 	private static function emit( WP_REST_Request $request ): void {
 		self::clear_the_way();
 
-		require_once HCFD_PATH . 'includes/datastar-php/loader.php';
+		require_once ULCAR_PATH . 'includes/datastar-php/loader.php';
 
 		self::close_to_other_origins();
 
@@ -186,50 +186,75 @@ final class Sse_Endpoint {
 		 * in -- a count that is too high makes the carousel step onto slides
 		 * that do not exist and blink on an empty box.
 		 */
-		$ids   = Slides::sanitize_ids( explode( ',', (string) $request['ids'] ) );
-		$total = count( $ids );
+		$ids    = Slides::sanitize_ids( explode( ',', (string) $request['ids'] ) );
+		$total  = count( $ids );
+		$signal = Slides::signal_key( $target );
 
 		if ( $total > 1 ) {
-			$signal = Slides::signal_key( $target );
-
+			/*
+			 * Line endings are normalised because the SSE frame is built from
+			 * this string line by line. The SDK splits on "\n" only, while the
+			 * parser in the browser also treats a bare "\r" as the end of a
+			 * line: one carriage return in an imported alt text would cut the
+			 * frame in two and the rest of the burst would be discarded. Core
+			 * strips them from alt text it saves itself; this covers what other
+			 * code saved.
+			 */
 			$sse->patchElements(
-				Slides::render_slides( $ids, $size, 1, $signal ),
+				str_replace( array( "\r\n", "\r" ), "\n", Slides::render_slides( $ids, $size, 1, $signal ) ),
 				array(
-					'selector' => '#' . $target . ' .hcfd-track',
+					'selector' => '#' . $target . ' .ulcar-track',
 					'mode'     => 'append',
 				)
 			);
-
-			$sse->patchSignals(
-				(string) wp_json_encode(
-					array(
-						'hcfd' => array(
-							substr( $signal, strlen( 'hcfd.' ) ) => array(
-								'count'  => $total,
-								'loaded' => true,
-							),
-						),
-					)
-				)
-			);
-
-			// Sent last, and as its own element, so that the cadence only starts
-			// once `count` is right. It also means the interval reaches a page
-			// a caching layer froze days ago: the HTML is stale, the burst is
-			// never cached. data-on-interval parses its duration from the
-			// attribute NAME, so no signal could have carried it.
-			$sse->patchElements( self::cadence_element( $target, $signal ) );
 		}
+
+		/*
+		 * Always sent, even when there is nothing to rotate. A carousel whose
+		 * other images were deleted after its page went into a cache asks for a
+		 * burst like any other; this is what tells it that the answer came and
+		 * was "one". `loaded` closes the door on a second request either way.
+		 */
+		$sse->patchSignals(
+			(string) wp_json_encode(
+				array(
+					'ulcar' => array(
+						substr( $signal, strlen( 'ulcar.' ) ) => array(
+							'count'  => $total,
+							'loaded' => true,
+						),
+					),
+				)
+			)
+		);
+
+		// Sent last, and as its own element, so that the cadence only starts
+		// once `count` is right. It also means the interval reaches a page
+		// a caching layer froze days ago: the HTML is stale, the burst is
+		// never cached. data-on-interval parses its duration from the
+		// attribute NAME, so no signal could have carried it.
+		$sse->patchElements( self::cadence_element( $target, $signal, $total > 1 ) );
 	}
 
 	/**
 	 * Builds the element that drives the rotation.
 	 *
-	 * @param string $target DOM id of the carousel.
-	 * @param string $signal Signal path of the carousel.
+	 * The element also carries `data-ulcar-burst`, and that attribute is the
+	 * only proof the page ever gets that a burst arrived: view.js reads it
+	 * before deciding that a carousel still alone on its first image is
+	 * broken. Datastar ignores the attribute, which is a plain data-* and not
+	 * one of its own.
+	 *
+	 * @param string $target  DOM id of the carousel.
+	 * @param string $signal  Signal path of the carousel.
+	 * @param bool   $rotates Whether there is more than one slide to rotate.
 	 * @return string HTML for a single element.
 	 */
-	private static function cadence_element( string $target, string $signal ): string {
+	private static function cadence_element( string $target, string $signal, bool $rotates ): string {
+		if ( ! $rotates ) {
+			return sprintf( '<div id="%1$s-cadence" hidden data-ulcar-burst=""></div>', esc_attr( $target ) );
+		}
+
 		/*
 		 * The whole behaviour, in one expression: unless the visitor asked for
 		 * reduced motion, step to the next slide and wrap around at the end.
@@ -268,7 +293,7 @@ final class Sse_Endpoint {
 		 * bundle, not assumed.
 		 */
 		return sprintf(
-			'<div id="%1$s-cadence" hidden data-on-interval__duration.%2$dms="%3$s"></div>',
+			'<div id="%1$s-cadence" hidden data-ulcar-burst="" data-on-interval__duration.%2$dms="%3$s"></div>',
 			esc_attr( $target ),
 			Settings::interval_ms(),
 			esc_attr( $advance )

@@ -6,10 +6,10 @@
  * Everything about "what a slide looks like" lives here, so the block and the
  * SSE endpoint cannot drift apart.
  *
- * @package HypermediaCarouselForDatastar
+ * @package UltralightCarouselViaSse
  */
 
-namespace HCFD;
+namespace ULCAR;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -28,10 +28,16 @@ final class Slides {
 	 * Keeps only ids that are really images this site can show.
 	 *
 	 * An id can name a post that was deleted, a PDF someone dropped into the
-	 * gallery, or an attachment whose parent went to the trash. Left alone,
-	 * each of those renders as an empty slide: the carousel then blanks out for
-	 * a few seconds at a time with nothing on screen and no error anywhere.
-	 * Callers must count what comes back, never what went in.
+	 * gallery, or an attachment that was itself trashed. Left alone, each of
+	 * those renders as an empty slide: the carousel then blanks out for a few
+	 * seconds at a time with nothing on screen and no error anywhere. Callers
+	 * must count what comes back, never what went in.
+	 *
+	 * What this does NOT look at is the parent post. An attachment stays
+	 * `inherit` when its parent is a draft, is private, or goes to the trash,
+	 * and it is kept here on purpose: the common case is a photograph uploaded
+	 * while writing one page and reused on another, and core renders it just
+	 * the same. The upload itself is world-readable either way.
 	 *
 	 * @param array<int|string> $ids Raw attachment ids.
 	 * @return array<int> Existing image attachments, in the given order, deduplicated.
@@ -78,18 +84,25 @@ final class Slides {
 	/**
 	 * Builds the DOM id of one carousel instance.
 	 *
-	 * Deliberately not wp_unique_id(): that counter depends on how many other
-	 * things were rendered first, so the same block can get a different id on a
-	 * page assembled from partially cached fragments -- and the id is baked
-	 * into the HMAC below.
+	 * Stable for a given render: the same ids, the same size and the same
+	 * ordinal always give the same id, which matters because the id is baked
+	 * into the HMAC below and both are frozen together into cached HTML.
+	 *
+	 * Not wp_unique_id(): its counter runs across everything WordPress renders
+	 * in the request, so any other block that uses it moves this one's number.
+	 * The ordinal here counts carousels only. It is still a per-request counter,
+	 * and that is its one limit: a page assembled from fragments cached at
+	 * different times can carry two carousels that both believe they are the
+	 * first. They only collide if they also hold the same images at the same
+	 * size, and then they receive the same burst, so nothing visible goes wrong.
 	 *
 	 * @param array<int> $ids      Sanitised attachment ids.
 	 * @param string     $size     Sanitised size slug.
 	 * @param int        $instance Ordinal of this carousel within the request.
-	 * @return string DOM id, matching /^hcfd-[a-f0-9]{12}$/.
+	 * @return string DOM id, matching /^ulcar-[a-f0-9]{12}$/.
 	 */
 	public static function dom_id( array $ids, string $size, int $instance ): string {
-		return 'hcfd-' . substr( md5( implode( ',', $ids ) . '|' . $size . '|' . $instance ), 0, 12 );
+		return 'ulcar-' . substr( md5( implode( ',', $ids ) . '|' . $size . '|' . $instance ), 0, 12 );
 	}
 
 	/**
@@ -97,14 +110,14 @@ final class Slides {
 	 *
 	 * Datastar signals are global to the page, so two carousels would otherwise
 	 * drive each other. The leading "k" is not decoration: a DOM id hash can
-	 * start with a digit, which would make `$hcfd.0a1b2c.view` a syntax error
+	 * start with a digit, which would make `$ulcar.0a1b2c.view` a syntax error
 	 * in a Datastar expression.
 	 *
 	 * @param string $dom_id Value returned by dom_id().
-	 * @return string Signal path, without the leading `$`, e.g. "hcfd.ka1b2c3d4e5f6".
+	 * @return string Signal path, without the leading `$`, e.g. "ulcar.ka1b2c3d4e5f6".
 	 */
 	public static function signal_key( string $dom_id ): string {
-		return 'hcfd.k' . substr( $dom_id, strlen( 'hcfd-' ) );
+		return 'ulcar.k' . substr( $dom_id, strlen( 'ulcar-' ) );
 	}
 
 	/**
@@ -117,6 +130,17 @@ final class Slides {
 	 * stale into any cached page. An HMAC over the parameters depends on
 	 * neither.
 	 *
+	 * The blog id is part of the message. On a multisite network every site
+	 * derives wp_salt() from the same network-wide secret, so without it a
+	 * token minted on one site would open the same ids on every other -- ids
+	 * that name different attachments there. A single site pays nothing for
+	 * the extra field.
+	 *
+	 * What the token proves is that THIS site composed THIS list. It does not
+	 * make the list confidential: anyone able to preview a post can have the
+	 * site sign any ids they type, exactly as the core gallery block renders
+	 * any id it is given. Uploads are world-readable to begin with.
+	 *
 	 * @param string $ids_csv Comma-separated sanitised ids, in render order.
 	 * @param string $size    Sanitised size slug.
 	 * @param string $target  DOM id of the instance.
@@ -124,7 +148,11 @@ final class Slides {
 	 */
 	public static function token( string $ids_csv, string $size, string $target ): string {
 		return substr(
-			hash_hmac( 'sha256', $ids_csv . '|' . $size . '|' . $target, wp_salt( 'hcfd_slides' ) ),
+			hash_hmac(
+				'sha256',
+				get_current_blog_id() . '|' . $ids_csv . '|' . $size . '|' . $target,
+				wp_salt( 'ulcar_slides' )
+			),
 			0,
 			32
 		);
@@ -154,8 +182,8 @@ final class Slides {
 	 * @return string HTML, safe to print.
 	 */
 	public static function render_slide( int $id, string $size, int $index, int $total, string $signal = '' ): string {
-		$classes = 'hcfd-slide';
-		$attrs   = array( 'class' => 'hcfd-image' );
+		$classes = 'ulcar-slide';
+		$attrs   = array( 'class' => 'ulcar-image' );
 
 		if ( 0 === $index ) {
 			// The first slide is almost always the LCP element: it must not be
@@ -191,11 +219,11 @@ final class Slides {
 		return sprintf(
 			'<div class="%1$s" role="group" aria-roledescription="%2$s" aria-label="%3$s"%4$s%5$s>%6$s</div>',
 			esc_attr( $classes ),
-			esc_attr__( 'slide', 'hypermedia-carousel-for-datastar' ),
+			esc_attr__( 'slide', 'ultralight-carousel-via-sse' ),
 			esc_attr(
 				sprintf(
 					/* translators: 1: slide number, 2: total number of slides. */
-					__( '%1$d of %2$d', 'hypermedia-carousel-for-datastar' ),
+					__( '%1$d of %2$d', 'ultralight-carousel-via-sse' ),
 					$index + 1,
 					$total
 				)

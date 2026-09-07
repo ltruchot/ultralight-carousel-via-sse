@@ -3,11 +3,11 @@
  * @copyright Copyright (c) PutYourLightsOn
  */
 
-namespace HCFD\Datastar\events;
+namespace ULCAR\Datastar\events;
 
 defined( 'ABSPATH' ) || exit;
 
-use HCFD\Datastar\enums\EventType;
+use ULCAR\Datastar\enums\EventType;
 
 interface EventInterface
 {

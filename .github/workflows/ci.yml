@@ -69,10 +69,9 @@ jobs:
       - uses: WordPress/plugin-check-action@v1
         with:
           build-dir: './build/${{ github.event.repository.name }}'
-          # The vendored Datastar SDK is third-party code, kept verbatim apart
-          # from its namespace and pinned by checksum in the unit tests. Its
-          # three findings are recorded, with the reason each one stands, in
-          # includes/datastar-php/UPSTREAM.md. Excluding it here keeps this job
-          # about OUR regressions; the reviewer still sees them on submission,
-          # which is where that conversation belongs.
-          exclude-directories: 'datastar-php'
+          # Everything, the vendored Datastar SDK included: its three inherent
+          # findings carry a phpcs:ignore comment with the reason, placed by
+          # bin/vendor-datastar.sh and listed in includes/datastar-php/UPSTREAM.md.
+          # An upload to the directory is refused on any error, so this job
+          # has to see exactly what the upload form will see.
+          include-experimental: true

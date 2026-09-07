@@ -13,7 +13,7 @@
  * which drives a real browser against a real site. Neither half is enough on
  * its own.
  *
- * @package HypermediaCarouselForDatastar
+ * @package UltralightCarouselViaSse
  */
 
 declare(strict_types=1);

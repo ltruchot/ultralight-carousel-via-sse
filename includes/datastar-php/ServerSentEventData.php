@@ -3,11 +3,11 @@
  * @copyright Copyright (c) PutYourLightsOn
  */
 
-namespace HCFD\Datastar;
+namespace ULCAR\Datastar;
 
 defined( 'ABSPATH' ) || exit;
 
-use HCFD\Datastar\enums\EventType;
+use ULCAR\Datastar\enums\EventType;
 
 class ServerSentEventData
 {

@@ -3,15 +3,15 @@
  * @copyright Copyright (c) PutYourLightsOn
  */
 
-namespace HCFD\Datastar\events;
+namespace ULCAR\Datastar\events;
 
 defined( 'ABSPATH' ) || exit;
 
 use Exception;
-use HCFD\Datastar\Consts;
-use HCFD\Datastar\enums\ElementPatchMode;
-use HCFD\Datastar\enums\EventType;
-use HCFD\Datastar\enums\NamespaceType;
+use ULCAR\Datastar\Consts;
+use ULCAR\Datastar\enums\ElementPatchMode;
+use ULCAR\Datastar\enums\EventType;
+use ULCAR\Datastar\enums\NamespaceType;
 
 class PatchElements implements EventInterface
 {
@@ -89,6 +89,7 @@ class PatchElements implements EventInterface
         if ($value === null) {
             $enumValues = array_map(fn($case) => '`' . $case->value . '`', ElementPatchMode::cases());
 
+            // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- the message lists the cases of a hard-coded enum; no user input reaches it.
             throw new Exception('An invalid value was passed into `mode`. The value must be one of: ' . implode(', ', $enumValues) . '.');
         }
 
@@ -102,6 +103,7 @@ class PatchElements implements EventInterface
         if ($value === null) {
             $enumValues = array_map(fn($case) => '`' . $case->value . '`', NamespaceType::cases());
 
+            // phpcs:ignore WordPress.Security.EscapeOutput.ExceptionNotEscaped -- the message lists the cases of a hard-coded enum; no user input reaches it.
             throw new Exception('An invalid value was passed into `namespace`. The value must be one of: ' . implode(', ', $enumValues) . '.');
         }
 

@@ -4,17 +4,17 @@
  *
  * This file runs WITHOUT the plugin being loaded: no constants, no classes, no
  * functions of ours exist here. The option name is therefore written out in
- * full, and has to be kept in step with HCFD\Settings::OPTION by hand.
+ * full, and has to be kept in step with ULCAR\Settings::OPTION by hand.
  *
- * @package HypermediaCarouselForDatastar
+ * @package UltralightCarouselViaSse
  */
 
 defined( 'WP_UNINSTALL_PLUGIN' ) || exit;
 
-/** Mirrors HCFD\Settings::OPTION. */
-const HCFD_UNINSTALL_OPTION = 'hcfd_settings';
+/** Mirrors ULCAR\Settings::OPTION. */
+const ULCAR_UNINSTALL_OPTION = 'ulcar_settings';
 
-delete_option( HCFD_UNINSTALL_OPTION );
+delete_option( ULCAR_UNINSTALL_OPTION );
 
 if ( is_multisite() ) {
 	/*
@@ -23,19 +23,19 @@ if ( is_multisite() ) {
 	 * uninstall.
 	 */
 	if ( ! wp_is_large_network() ) {
-		$hcfd_sites = get_sites(
+		$ulcar_sites = get_sites(
 			array(
 				'fields' => 'ids',
 				'number' => 0,
 			)
 		);
 
-		foreach ( $hcfd_sites as $hcfd_site_id ) {
-			switch_to_blog( $hcfd_site_id );
-			delete_option( HCFD_UNINSTALL_OPTION );
+		foreach ( $ulcar_sites as $ulcar_site_id ) {
+			switch_to_blog( $ulcar_site_id );
+			delete_option( ULCAR_UNINSTALL_OPTION );
 			restore_current_blog();
 		}
 	}
 
-	delete_site_option( HCFD_UNINSTALL_OPTION );
+	delete_site_option( ULCAR_UNINSTALL_OPTION );
 }

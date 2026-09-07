@@ -2,10 +2,10 @@
 /**
  * Registers the bundled Datastar runtime as a script module.
  *
- * @package HypermediaCarouselForDatastar
+ * @package UltralightCarouselViaSse
  */
 
-namespace HCFD;
+namespace ULCAR;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -15,7 +15,7 @@ defined( 'ABSPATH' ) || exit;
 final class Assets {
 
 	/** Module identifier, referenced by block.json and by view.asset.php. */
-	public const MODULE = 'hcfd-datastar';
+	public const MODULE = 'ulcar-datastar';
 
 	/** Version of the bundled Datastar runtime. Must match the file name. */
 	public const DATASTAR_VERSION = '1.0.3';
@@ -62,8 +62,8 @@ final class Assets {
 		 * @param string $version Version this plugin was written against.
 		 */
 		$src = apply_filters(
-			'hcfd_datastar_src',
-			HCFD_URL . 'assets/vendor/datastar/datastar-' . self::DATASTAR_VERSION . '.js',
+			'ulcar_datastar_src',
+			ULCAR_URL . 'assets/vendor/datastar/datastar-' . self::DATASTAR_VERSION . '.js',
 			self::DATASTAR_VERSION
 		);
 

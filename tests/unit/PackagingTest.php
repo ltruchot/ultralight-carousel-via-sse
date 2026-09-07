@@ -6,12 +6,12 @@
  * easiest to let drift: a Stable tag that no longer matches the version in the
  * PHP header leaves a plugin that cannot be updated, and says nothing about it.
  *
- * @package HypermediaCarouselForDatastar
+ * @package UltralightCarouselViaSse
  */
 
 declare(strict_types=1);
 
-namespace HCFD\Tests;
+namespace ULCAR\Tests;
 
 use PHPUnit\Framework\TestCase;
 
@@ -38,7 +38,7 @@ final class PackagingTest extends TestCase {
 	 */
 	public function test_the_two_files_agree( string $php_header, string $readme_header ): void {
 		$this->assertSame(
-			$this->header( 'hypermedia-carousel-for-datastar.php', $php_header ),
+			$this->header( 'ultralight-carousel-via-sse.php', $php_header ),
 			$this->header( 'readme.txt', $readme_header )
 		);
 	}
@@ -57,17 +57,17 @@ final class PackagingTest extends TestCase {
 	public function test_the_minimums_are_the_ones_the_code_actually_needs(): void {
 		// The vendored SDK uses enums, which are a PARSE error below 8.1 --
 		// announcing anything lower would mean a white screen on activation.
-		$this->assertSame( '8.1', $this->header( 'hypermedia-carousel-for-datastar.php', 'Requires PHP' ) );
+		$this->assertSame( '8.1', $this->header( 'ultralight-carousel-via-sse.php', 'Requires PHP' ) );
 
 		// wp_register_script_module() and viewScriptModule arrived in 6.5.
-		$this->assertSame( '6.5', $this->header( 'hypermedia-carousel-for-datastar.php', 'Requires at least' ) );
+		$this->assertSame( '6.5', $this->header( 'ultralight-carousel-via-sse.php', 'Requires at least' ) );
 
 		// And the runtime guard has to agree with the header, because a site
 		// that downgrades PHP after activation never goes through activation
 		// again.
-		$main = (string) file_get_contents( self::ROOT . '/hypermedia-carousel-for-datastar.php' );
-		$this->assertStringContainsString( "define( 'HCFD_MIN_PHP', '8.1' );", $main );
-		$this->assertStringContainsString( "define( 'HCFD_MIN_WP', '6.5' );", $main );
+		$main = (string) file_get_contents( self::ROOT . '/ultralight-carousel-via-sse.php' );
+		$this->assertStringContainsString( "define( 'ULCAR_MIN_PHP', '8.1' );", $main );
+		$this->assertStringContainsString( "define( 'ULCAR_MIN_WP', '6.5' );", $main );
 	}
 
 	public function test_the_text_domain_is_the_slug(): void {
@@ -78,7 +78,7 @@ final class PackagingTest extends TestCase {
 		// a checkout can sit anywhere -- inside a container it is /app -- and a
 		// test that depended on that would fail for a reason having nothing to
 		// do with the plugin.
-		$main = 'hypermedia-carousel-for-datastar.php';
+		$main = 'ultralight-carousel-via-sse.php';
 		$slug = basename( $main, '.php' );
 
 		$this->assertFileExists( self::ROOT . '/' . $main );
@@ -119,11 +119,11 @@ final class PackagingTest extends TestCase {
 		// language directory only, and the ones travelling with the plugin are
 		// never loaded. The symptom is a plugin that stays in English on a site
 		// that is not -- with nothing anywhere to say why.
-		$path = $this->header( 'hypermedia-carousel-for-datastar.php', 'Domain Path' );
+		$path = $this->header( 'ultralight-carousel-via-sse.php', 'Domain Path' );
 
 		$this->assertSame( '/languages', $path );
 		$this->assertDirectoryExists( self::ROOT . $path );
-		$this->assertFileExists( self::ROOT . $path . '/hypermedia-carousel-for-datastar.pot' );
+		$this->assertFileExists( self::ROOT . $path . '/ultralight-carousel-via-sse.pot' );
 
 		// A .po beside a .mo, and never one without the other: the .mo is what
 		// WordPress reads, the .po is what a human can edit.
@@ -142,7 +142,7 @@ final class PackagingTest extends TestCase {
 		// `wp i18n make-json` -- sans lui, l'editeur reste en anglais quelle que
 		// soit la qualite de la traduction. Constate le 31/08/2026 : tout le
 		// panneau lateral en anglais alors que le `.po` etait complet.
-		$json = glob( dirname( __DIR__, 2 ) . '/languages/hypermedia-carousel-for-datastar-fr_FR-*.json' );
+		$json = glob( dirname( __DIR__, 2 ) . '/languages/ultralight-carousel-via-sse-fr_FR-*.json' );
 
 		$this->assertNotEmpty( $json, 'Aucun fichier de traduction JavaScript livre.' );
 
@@ -162,7 +162,7 @@ final class PackagingTest extends TestCase {
 		$source = (string) file_get_contents( dirname( __DIR__, 2 ) . '/includes/class-block.php' );
 
 		$this->assertMatchesRegularExpression(
-			'/wp_set_script_translations\([^;]*HCFD_PATH \. \x27languages\x27/s',
+			'/wp_set_script_translations\([^;]*ULCAR_PATH \. \x27languages\x27/s',
 			$source
 		);
 	}
@@ -178,11 +178,12 @@ final class PackagingTest extends TestCase {
 		// sans cette regle on recoupe le fichier a chaque sortie, ce qui est arrive
 		// trois fois de suite le 31/08/2026 avant qu'on s'en apercoive.
 		//
-		// Et le budget est desormais depense : mesure le 01/09/2026, il reste
-		// une cinquantaine d'octets. Toute addition se paie donc par un retrait,
-		// et la premiere chose a retirer reste le changelog de la version
-		// precedente -- pas une explication utile a qui installe le plugin.
-		$this->assertLessThan( 10 * 1024, strlen( $readme ) );
+		// The handbook says "larger than 10k", and does not say which k. Under
+		// 10 000 bytes both readings hold. Measured on 07/09/2026: 6 857 bytes
+		// after the rewrite, so there is room, and the first thing to cut when
+		// it runs out is the changelog of the previous release, not an
+		// explanation that helps whoever installs the plugin.
+		$this->assertLessThan( 10000, strlen( $readme ) );
 
 		// Tested up to takes digits, not "WP 6.8".
 		$this->assertMatchesRegularExpression( '/^[0-9.]+$/', $this->header( 'readme.txt', 'Tested up to' ) );
@@ -194,6 +195,73 @@ final class PackagingTest extends TestCase {
 		$this->assertStringNotContainsString( '<', $short );
 	}
 
+	public function test_nothing_ships_from_the_root_that_was_not_meant_to(): void {
+		// The mirror image of .distignore. That file lists what to leave out;
+		// this lists what may go in. Anything new at the root that is on
+		// neither list fails here, which is how a hidden directory dropped by a
+		// tool is caught before Plugin Check refuses the ZIP for it.
+		$allowed = array(
+			'LICENSE.txt',
+			'README.md',
+			'readme.txt',
+			'ultralight-carousel-via-sse.php',
+			'uninstall.php',
+			'assets',
+			'blocks',
+			'includes',
+			'languages',
+		);
+
+		$roots = array_values(
+			array_unique(
+				array_map(
+					static fn( string $path ): string => explode( '/', $path, 2 )[0],
+					$this->shipped_files()
+				)
+			)
+		);
+		sort( $roots );
+		sort( $allowed );
+
+		$this->assertSame( $allowed, $roots, 'Something at the root would ship that is not on the list.' );
+	}
+
+	public function test_the_editor_and_the_server_agree_on_the_most_images_a_carousel_holds(): void {
+		// The server keeps the first MAX_SLIDES and drops the rest without a
+		// word. The media modal cannot know the limit, so the editor script
+		// carries its own copy to warn the author. Two copies of one number
+		// only stay equal if something checks.
+		$php = (string) file_get_contents( self::ROOT . '/includes/class-slides.php' );
+		$js  = (string) file_get_contents( self::ROOT . '/blocks/carousel/index.js' );
+
+		$this->assertSame( 1, preg_match( '/const MAX_SLIDES = (\d+);/', $php, $from_php ) );
+		$this->assertSame( 1, preg_match( '/var MAX_SLIDES = (\d+);/', $js, $from_js ) );
+		$this->assertSame( $from_php[1], $from_js[1] );
+	}
+
+	public function test_every_translation_header_line_is_well_formed(): void {
+		// A header line that lost its closing quote does not stop msgfmt: it
+		// swallows the next line into the same string, and the compiled
+		// catalogue carries a version number cut in half and two dates fused
+		// into one. Found in the shipped fr_FR file on 07/09/2026, so it is
+		// asserted rather than trusted.
+		foreach ( array_merge( glob( self::ROOT . '/languages/*.po' ), glob( self::ROOT . '/languages/*.pot' ) ) as $file ) {
+			$source = (string) file_get_contents( $file );
+			$header = explode( "\n\n", $source, 2 )[0];
+
+			foreach ( explode( "\n", $header ) as $line ) {
+				if ( '' === $line || str_starts_with( $line, '#' ) || str_starts_with( $line, 'msg' ) ) {
+					continue;
+				}
+				$this->assertMatchesRegularExpression(
+					'/^"[^"]*\\\\n"$/',
+					$line,
+					sprintf( '%s: header line %s is not one quoted string ending in \\n.', basename( $file ), $line )
+				);
+			}
+		}
+	}
+
 	public function test_the_readme_says_where_the_source_is(): void {
 		// Guideline 4 treats minified JS with no documented source as a failure,
 		// and names the fix: a Development or Build section in readme.txt
@@ -202,7 +270,7 @@ final class PackagingTest extends TestCase {
 		$readme = (string) file_get_contents( self::ROOT . '/readme.txt' );
 
 		$this->assertMatchesRegularExpression( '/^== (Development|Build) ==$/m', $readme );
-		$this->assertStringContainsString( 'github.com/ltruchot/hypermedia-carousel-for-datastar', $readme );
+		$this->assertStringContainsString( 'github.com/ltruchot/ultralight-carousel-via-sse', $readme );
 
 		// And the source map that makes that one file readable really ships.
 		$this->assertContains( 'assets/vendor/datastar/datastar-1.0.3.js.map', $this->shipped_files() );
@@ -227,7 +295,7 @@ final class PackagingTest extends TestCase {
 		foreach ( $this->shipped_files( 'php' ) as $relative ) {
 			$source = (string) file_get_contents( self::ROOT . '/' . $relative );
 
-			if ( preg_match_all( '/apply_filters\(\s*\x27(hcfd_[a-z_]+)\x27/', $source, $matches ) ) {
+			if ( preg_match_all( '/apply_filters\(\s*\x27(ulcar_[a-z_]+)\x27/', $source, $matches ) ) {
 				$hooks = array_merge( $hooks, $matches[1] );
 			}
 		}
@@ -279,12 +347,12 @@ final class PackagingTest extends TestCase {
 
 	public function test_no_translation_entry_was_lost_or_merged(): void {
 		// A gettext entry is identified by the pair (context, text), never by
-		// the text alone. "Hypermedia Carousel" exists twice — once with
+		// the text alone. "Ultralight Carousel" exists twice — once with
 		// msgctxt "block title", once without — and a deduplication keyed on
 		// the text merged them, which silently left the block titled in English
 		// while everything around it was translated. Keywords kept working,
 		// which made it look like the translation was fine.
-		$pot = $this->catalogue( self::ROOT . '/languages/hypermedia-carousel-for-datastar.pot' );
+		$pot = $this->catalogue( self::ROOT . '/languages/ultralight-carousel-via-sse.pot' );
 
 		$this->assertNotEmpty( $pot, 'The .pot is empty: this check would be vacuous.' );
 
@@ -309,7 +377,7 @@ final class PackagingTest extends TestCase {
 	public function test_the_licence_is_declared_and_present(): void {
 		$this->assertSame(
 			'GPL v2 or later',
-			$this->header( 'hypermedia-carousel-for-datastar.php', 'License' )
+			$this->header( 'ultralight-carousel-via-sse.php', 'License' )
 		);
 		$this->assertFileExists( self::ROOT . '/LICENSE.txt' );
 

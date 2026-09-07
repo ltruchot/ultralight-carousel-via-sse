@@ -14,7 +14,7 @@
 	'use strict';
 
 	var VERSION = '1.0.3';
-	var PREFIX = '[Hypermedia Carousel] ';
+	var PREFIX = '[Ultralight Carousel] ';
 	var root = document.documentElement;
 
 	/**
@@ -60,7 +60,7 @@
 				'to the same attributes and neither can see the other. Measured, ' +
 				'the page froze within a second.\n  ' +
 				runtimes.join( '\n  ' ) +
-				'\nPoint them at one file with the `hcfd_datastar_src` filter, or ' +
+				'\nPoint them at one file with the `ulcar_datastar_src` filter, or ' +
 				'stop one of the plugins from loading its own copy.'
 		);
 	}
@@ -73,11 +73,11 @@
 
 	// Two copies of THIS plugin, which the check above cannot see when both
 	// carry the same file name.
-	if ( root.dataset.hcfdRuntime && root.dataset.hcfdRuntime !== VERSION ) {
+	if ( root.dataset.ulcarRuntime && root.dataset.ulcarRuntime !== VERSION ) {
 		window.console.error(
 			PREFIX +
 				'Datastar ' +
-				root.dataset.hcfdRuntime +
+				root.dataset.ulcarRuntime +
 				' was already on this page and this plugin bundles ' +
 				VERSION +
 				'. Two versions of one library share the same attributes and will ' +
@@ -85,14 +85,49 @@
 		);
 	}
 
-	root.dataset.hcfdRuntime = VERSION;
+	root.dataset.ulcarRuntime = VERSION;
 
 	/**
-	 * Did the stream ever land?
+	 * Did the burst fail outright?
+	 *
+	 * Datastar says nothing in the console when a request comes back with a
+	 * status other than 200, nor when the network gives up: it dispatches a
+	 * `datastar-fetch` event and stops -- read in the shipped bundle, `error`
+	 * with the status for anything from 400 up, `retries-failed` after the
+	 * last reconnection attempt. The status is the one fact that names the
+	 * cause: 401 or 403 is a site that restricts its REST API to logged-in
+	 * users, 404 is a REST API that is not routed at all, 5xx is PHP.
+	 * Recorded per carousel so the report below can quote it instead of
+	 * guessing.
+	 */
+	var failures = {};
+
+	document.addEventListener( 'datastar-fetch', function ( event ) {
+		var detail = event.detail || {};
+		var carousel = detail.el && detail.el.closest ? detail.el.closest( '.ulcar-carousel' ) : null;
+
+		if ( ! carousel ) {
+			return;
+		}
+
+		if ( 'error' === detail.type ) {
+			failures[ carousel.id ] = 'HTTP ' + ( ( detail.argsRaw && detail.argsRaw.status ) || 'error' );
+		} else if ( 'retries-failed' === detail.type ) {
+			failures[ carousel.id ] = 'a network error, after every retry';
+		}
+	} );
+
+	/**
+	 * Did the burst ever land?
 	 *
 	 * A carousel that never received its burst stays on its first image. That is
 	 * the intended failure -- nothing is broken for the visitor -- but it is
 	 * indistinguishable from a carousel of one image unless somebody says so.
+	 *
+	 * What proves the burst landed is the marker the server puts on the cadence
+	 * element, not the number of slides: a carousel whose other photographs were
+	 * deleted after its page went into a cache receives a burst that carries
+	 * nothing but that marker, and it is not broken.
 	 *
 	 * Five seconds: the burst is asked for 500ms after load and answers in one
 	 * round trip. Anything still alone after ten times that is not slow, it is
@@ -102,14 +137,15 @@
 		reportDuplicateRuntimes();
 
 		Array.prototype.slice
-			.call( document.querySelectorAll( '.hcfd-carousel' ) )
+			.call( document.querySelectorAll( '.ulcar-carousel' ) )
 			.forEach( function ( carousel ) {
-				if ( carousel.querySelectorAll( '.hcfd-slide' ).length > 1 ) {
+				if ( carousel.querySelector( '[data-ulcar-burst]' ) ) {
 					return;
 				}
 
 				var expression = carousel.getAttribute( 'data-init__delay.500ms' ) || '';
-				var url = expression.match( /@get\('([^']+)'\)/ );
+				var url = expression.match( /@get\('([^']+)'/ );
+				var failure = failures[ carousel.id ];
 
 				window.console.error(
 					PREFIX +
@@ -118,9 +154,12 @@
 						'" never received its slides, and is showing its first image only.\n' +
 						'Its stream is ' +
 						( url ? url[ 1 ] : 'not in the markup' ) +
-						'\nThings that produce exactly this: the Datastar runtime was blocked ' +
-						'or failed to load, a Content-Security-Policy without the nonce filter ' +
-						'(see the readme), or a proxy that buffers text/event-stream.'
+						( failure ? '\nThe request failed with: ' + failure : '' ) +
+						'\nThings that produce exactly this: a REST API restricted to logged-in ' +
+						'users (allow the `ulcar/v1` namespace), a Site Address that is not the ' +
+						'one visitors use (the request is then cross-origin), the Datastar ' +
+						'runtime blocked or delayed by an optimisation plugin, or a ' +
+						'Content-Security-Policy without the nonce filter. See the readme.'
 				);
 			} );
 	}, 5000 );

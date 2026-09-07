@@ -3,12 +3,12 @@
  * @copyright Copyright (c) PutYourLightsOn
  */
 
-namespace HCFD\Datastar\events;
+namespace ULCAR\Datastar\events;
 
 defined( 'ABSPATH' ) || exit;
 
-use HCFD\Datastar\Consts;
-use HCFD\Datastar\enums\EventType;
+use ULCAR\Datastar\Consts;
+use ULCAR\Datastar\enums\EventType;
 
 class PatchSignals implements EventInterface
 {

@@ -7,12 +7,12 @@
  * day that stops being true -- which is the only form in which such a promise
  * is worth making.
  *
- * @package HypermediaCarouselForDatastar
+ * @package UltralightCarouselViaSse
  */
 
 declare(strict_types=1);
 
-namespace HCFD\Tests;
+namespace ULCAR\Tests;
 
 use PHPUnit\Framework\TestCase;
 
@@ -65,7 +65,7 @@ final class SecurityTest extends TestCase {
 		// Without these the plugin does not run, or does not pass review.
 		foreach (
 			array(
-				'hypermedia-carousel-for-datastar.php',
+				'ultralight-carousel-via-sse.php',
 				'uninstall.php',
 				'readme.txt',
 				'LICENSE.txt',
@@ -75,7 +75,7 @@ final class SecurityTest extends TestCase {
 				'includes/datastar-php/loader.php',
 				'assets/vendor/datastar/datastar-1.0.3.js',
 				'assets/vendor/datastar/LICENSE.md',
-				'languages/hypermedia-carousel-for-datastar.pot',
+				'languages/ultralight-carousel-via-sse.pot',
 			) as $needed
 		) {
 			$this->assertContains( $needed, $all, sprintf( '%s would be missing from the ZIP.', $needed ) );
@@ -233,7 +233,7 @@ final class SecurityTest extends TestCase {
 		// Four parameters, four constraints, no free text anywhere.
 		$this->assertSame( 4, substr_count( $code, "'required'          => true" ) + substr_count( $code, "'required' => true" ) );
 		$this->assertStringContainsString( "'enum'     => Slides::SIZES", $code );
-		$this->assertStringContainsString( '^hcfd-[a-f0-9]{12}$', $code );
+		$this->assertStringContainsString( '^ulcar-[a-f0-9]{12}$', $code );
 		$this->assertStringContainsString( '^[a-f0-9]{32}$', $code );
 	}
 
@@ -243,7 +243,7 @@ final class SecurityTest extends TestCase {
 		// an off-by-one there would either answer 400 to a legitimate full
 		// carousel or let one extra id through the signature-checked list.
 		// Rebuilt here exactly as the endpoint builds it.
-		$pattern = '/^\d+(,\d+){0,' . ( \HCFD\Slides::MAX_SLIDES - 1 ) . '}$/';
+		$pattern = '/^\d+(,\d+){0,' . ( \ULCAR\Slides::MAX_SLIDES - 1 ) . '}$/';
 
 		$this->assertStringContainsString(
 			"'/^\\d+(,\\d+){0,' . ( Slides::MAX_SLIDES - 1 ) . '}$/'",
@@ -251,8 +251,8 @@ final class SecurityTest extends TestCase {
 			'The endpoint no longer builds its pattern the way this test rebuilds it.'
 		);
 
-		$full         = implode( ',', range( 1, \HCFD\Slides::MAX_SLIDES ) );
-		$one_too_many = implode( ',', range( 1, \HCFD\Slides::MAX_SLIDES + 1 ) );
+		$full         = implode( ',', range( 1, \ULCAR\Slides::MAX_SLIDES ) );
+		$one_too_many = implode( ',', range( 1, \ULCAR\Slides::MAX_SLIDES + 1 ) );
 
 		$this->assertSame( 1, preg_match( $pattern, '1' ) );
 		$this->assertSame( 1, preg_match( $pattern, $full ) );
@@ -298,13 +298,13 @@ final class SecurityTest extends TestCase {
 		// code passes a class constant, so it found none, compared two empty
 		// arrays and passed -- a test that could not fail. What follows asserts
 		// the name from both ends instead.
-		$this->assertSame( 'hcfd_settings', \HCFD\Settings::OPTION );
+		$this->assertSame( 'ulcar_settings', \ULCAR\Settings::OPTION );
 
 		// uninstall.php runs without the plugin loaded, so it cannot reach that
 		// constant and repeats the name. The two have to agree or uninstalling
 		// leaves the row behind.
 		$this->assertStringContainsString(
-			"const HCFD_UNINSTALL_OPTION = 'hcfd_settings';",
+			"const ULCAR_UNINSTALL_OPTION = 'ulcar_settings';",
 			$this->code_of( 'uninstall.php' )
 		);
 
@@ -324,7 +324,7 @@ final class SecurityTest extends TestCase {
 		foreach ( $names as $name ) {
 			$this->assertContains(
 				$name,
-				array( "'hcfd_settings'", 'self::OPTION', 'HCFD_UNINSTALL_OPTION' ),
+				array( "'ulcar_settings'", 'self::OPTION', 'ULCAR_UNINSTALL_OPTION' ),
 				sprintf( 'Unexpected option name: %s', $name )
 			);
 		}

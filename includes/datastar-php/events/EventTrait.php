@@ -3,12 +3,12 @@
  * @copyright Copyright (c) PutYourLightsOn
  */
 
-namespace HCFD\Datastar\events;
+namespace ULCAR\Datastar\events;
 
 defined( 'ABSPATH' ) || exit;
 
-use HCFD\Datastar\Consts;
-use HCFD\Datastar\ServerSentEventData;
+use ULCAR\Datastar\Consts;
+use ULCAR\Datastar\ServerSentEventData;
 
 trait EventTrait
 {

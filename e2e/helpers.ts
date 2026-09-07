@@ -1,10 +1,10 @@
 import type { Page } from '@playwright/test';
 
 /** The slide currently on screen, by its "n of m" label. */
-export async function visibleSlide( page: Page, root = '.hcfd-carousel' ): Promise< string | null > {
+export async function visibleSlide( page: Page, root = '.ulcar-carousel' ): Promise< string | null > {
 	return page.evaluate( ( selector ) => {
 		const carousel = document.querySelector( selector );
-		const shown = [ ...( carousel?.querySelectorAll( '.hcfd-slide' ) ?? [] ) ].filter(
+		const shown = [ ...( carousel?.querySelectorAll( '.ulcar-slide' ) ?? [] ) ].filter(
 			( slide ) => ! slide.hasAttribute( 'hidden' )
 		);
 		return shown[ 0 ]?.getAttribute( 'aria-label' ) ?? null;
@@ -14,10 +14,30 @@ export async function visibleSlide( page: Page, root = '.hcfd-carousel' ): Promi
 /** Waits until the burst has landed and the carousel holds every slide. */
 export async function waitForBurst( page: Page, slides: number ): Promise< void > {
 	await page.waitForFunction(
-		( expected ) => document.querySelectorAll( '.hcfd-slide:not(noscript .hcfd-slide)' ).length >= expected,
+		( expected ) => document.querySelectorAll( '.ulcar-slide:not(noscript .ulcar-slide)' ).length >= expected,
 		slides,
 		{ timeout: 15_000 }
 	);
+}
+
+/**
+ * The rotation interval the burst delivered, in milliseconds.
+ *
+ * Read from the cadence element rather than assumed: it is a site setting,
+ * and the suite runs against whatever site it is pointed at.
+ */
+export async function deliveredInterval( page: Page ): Promise< number > {
+	const names = await page.locator( '[data-ulcar-burst]' ).first().evaluate( ( el ) =>
+		Array.from( el.attributes ).map( ( a ) => a.name )
+	);
+	const name = names.find( ( n ) => n.startsWith( 'data-on-interval__duration.' ) );
+	const match = name?.match( /duration\.(\d+)ms$/ );
+
+	if ( ! match ) {
+		throw new Error( `No cadence on the burst marker; attributes: ${ names.join( ' ' ) }` );
+	}
+
+	return Number( match[ 1 ] );
 }
 
 /**
@@ -27,8 +47,10 @@ export async function waitForBurst( page: Page, slides: number ): Promise< void 
  * exactly the thing under test.
  */
 export async function streamUrl( page: Page ): Promise< string > {
-	const expression = await page.getAttribute( '.hcfd-carousel', 'data-init__delay.500ms' );
-	const match = expression?.match( /@get\('([^']+)'\)/ );
+	const expression = await page.getAttribute( '.ulcar-carousel', 'data-init__delay.500ms' );
+	// `@get('url', {…})`: the options after the URL are the request's, not
+	// ours to parse here.
+	const match = expression?.match( /@get\('([^']+)'/ );
 
 	if ( ! match ) {
 		throw new Error( `No stream URL in: ${ expression }` );

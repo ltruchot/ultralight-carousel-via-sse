@@ -200,6 +200,56 @@ fiable — la doc amont le dit en toutes lettres. Datastar n'examine ni ne netto
 dans un attribut. On fait passer les valeurs d'utilisateur **par des signaux**, jamais par
 interpolation dans l'expression.
 
+## `@get` dans un plugin distribué : deux options, et l'événement qui dit pourquoi ça a échoué
+
+**Mesuré le 07/09/2026, bundle 1.0.3, lu dans le code minifié.**
+
+**1. `payload: {}`.** Par défaut `@get` sérialise **tous les signaux de la page** dans la query
+string (`datastar=…`). Seul, c'est cinquante octets. Mais dès qu'un site partage un runtime
+Datastar entre deux extensions (ce que le readme conseille pour éviter le gel à deux runtimes),
+ce qu'une autre extension lie par `data-bind` — champ de recherche, mot de passe — part dans
+**nos** journaux d'accès. La route ne lit aucun signal. Dans le bundle : `y!==void 0?y:G(...)`,
+donc un objet vide passé en `payload` donne `datastar={}` et rien d'autre.
+
+**2. `openWhenHidden: true`.** Un GET est **annulé** quand l'onglet passe en arrière-plan et
+**relancé** quand il revient — mais seulement s'il est en vol à ce moment-là (l'écouteur
+`visibilitychange` n'existe que pendant la requête). Ouvrir une page dans un onglet d'arrière-plan
+et y passer pendant la salve la fait donc partir deux fois, et `mode: append` double toutes les
+diapositives ; la garde `loaded` ne peut rien, c'est la même requête qui repart. Une salve qui se
+ferme en 44 ms n'a rien à gagner à attendre l'onglet.
+
+**Le piège de mesure** : sur localhost la salve est finie avant qu'un test puisse changer la
+visibilité. Le test qui prouve la sensibilité **retarde la réponse** (`page.route` + 1 s) et
+bascule `document.hidden` pendant ce délai. Sans l'option : deux requêtes ; avec : une.
+
+**3. `datastar-fetch` est le seul récit d'un échec.** Datastar n'écrit **rien en console** quand
+la réponse n'est pas un 200 : il émet `document.dispatchEvent(new CustomEvent('datastar-fetch',
+{detail: {type, el, argsRaw}}))` et s'arrête. `type: 'error'` avec `argsRaw.status` (chaîne) pour
+tout statut ≥ 400 ; `retrying` puis `retries-failed` (`argsRaw: {}`) pour une erreur réseau ;
+`started` / `finished` autour. `el` est l'élément qui porte le `data-init`. Un diagnostic qui
+veut nommer la cause (REST restreinte → 401, route absente → 404, PHP → 5xx) écoute cet
+événement ; rien d'autre ne le lui dira.
+
+**Et un « pas de diapositives » n'est pas un « pas de réponse ».** Un carrousel dont les autres
+images ont été supprimées après la mise en cache de sa page reçoit une salve légitimement vide.
+Compter les diapositives pour décider qu'une salve a échoué crie au loup dans ce cas. La salve
+porte donc **toujours** son dernier élément, marqué `data-ulcar-burst`, même quand il n'y a rien à
+faire tourner, et c'est ce marqueur que le diagnostic lit.
+
+## Plugin Check et le SDK vendorisé
+
+**Le formulaire de dépôt de wordpress.org refuse un ZIP sur toute erreur de Plugin Check, que le
+code soit à nous ou non.** Le SDK PHP de Datastar en porte trois d'inhérentes (`echo` de la trame
+SSE, deux messages d'exception construits depuis un enum). Patcher le code amont est le début
+d'un fork ; **un commentaire `phpcs:ignore` avec la raison** sur chaque ligne, posé par le script
+de vendoring pour survivre au prochain rafraîchissement, laisse la ligne intacte et fait passer
+le formulaire. Mesuré : `wp plugin check … --include-experimental` sur l'arbre publié, SDK
+compris, **zéro signalement**.
+
+Et la CI doit vérifier **exactement ce que le formulaire verra** : pas d'`exclude-directories`.
+Une exclusion « pour garder le job sur nos régressions » est précisément ce qui laisse passer
+le refus au moment du dépôt.
+
 ## Signaux : ils sont globaux
 
 Deux composants sur une page se piloteraient l'un l'autre. On préfixe par instance, et
@@ -359,8 +409,8 @@ coup, parce que toutes les assertions portaient sur `getComputedStyle` :
    était toute la raison d'utiliser l'attribut `hidden`. Le `!important` répond à la feuille du
    navigateur, qui écrit `[hidden] { display: none !important }`.
 
-   **Et il faut alors que la transition soit portée par l'état SORTANT** — `.hcfd-slide[hidden]`,
-   pas `.hcfd-slide`. Une transition est choisie par l'état vers lequel on va : déclarée sur
+   **Et il faut alors que la transition soit portée par l'état SORTANT** — `.ulcar-slide[hidden]`,
+   pas `.ulcar-slide`. Une transition est choisie par l'état vers lequel on va : déclarée sur
    l'état visible, elle ferait aussi **fondre l'entrante**, et le flash du point 1 reviendrait
    (mesuré : 0,56 + 0,44, couverture 0,75).
 

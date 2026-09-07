@@ -1,11 +1,11 @@
 <?php
 
-namespace HCFD\Datastar;
+namespace ULCAR\Datastar;
 
 defined( 'ABSPATH' ) || exit;
 
-use HCFD\Datastar\enums\ElementPatchMode;
-use HCFD\Datastar\enums\NamespaceType;
+use ULCAR\Datastar\enums\ElementPatchMode;
+use ULCAR\Datastar\enums\NamespaceType;
 
 class Consts
 {

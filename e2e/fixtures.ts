@@ -13,40 +13,40 @@ export type Fixture = {
 };
 
 const block = ( ids: number[], label = 'Test carousel' ) =>
-	`<!-- wp:hcfd/carousel {"ids":[${ ids.join( ',' ) }],"ariaLabel":"${ label }"} /-->`;
+	`<!-- wp:ulcar/carousel {"ids":[${ ids.join( ',' ) }],"ariaLabel":"${ label }"} /-->`;
 
 export const FIXTURES: Record< string, Fixture > = {
 	many: {
-		slug: 'hcfd-e2e-many',
-		title: 'HCFD e2e — several images',
+		slug: 'ulcar-e2e-many',
+		title: 'ULCAR e2e — several images',
 		slides: 5,
 		content: ( ids ) => block( ids.slice( 0, 5 ) ),
 	},
 	one: {
-		slug: 'hcfd-e2e-one',
-		title: 'HCFD e2e — a single image',
+		slug: 'ulcar-e2e-one',
+		title: 'ULCAR e2e — a single image',
 		slides: 1,
 		content: ( ids ) => block( ids.slice( 0, 1 ) ),
 	},
 	none: {
-		slug: 'hcfd-e2e-none',
-		title: 'HCFD e2e — no image',
+		slug: 'ulcar-e2e-none',
+		title: 'ULCAR e2e — no image',
 		slides: 0,
 		content: () => block( [] ),
 	},
 	twice: {
-		slug: 'hcfd-e2e-twice',
-		title: 'HCFD e2e — two carousels',
+		slug: 'ulcar-e2e-twice',
+		title: 'ULCAR e2e — two carousels',
 		slides: 5,
 		content: ( ids ) =>
 			`${ block( ids.slice( 0, 3 ), 'First' ) }${ block( ids.slice( 3, 5 ), 'Second' ) }`,
 	},
 	hostile: {
-		slug: 'hcfd-e2e-hostile',
-		title: 'HCFD e2e — a hostile accessible name',
+		slug: 'ulcar-e2e-hostile',
+		title: 'ULCAR e2e — a hostile accessible name',
 		slides: 2,
 		content: ( ids ) =>
-			`<!-- wp:hcfd/carousel {"ids":[${ ids
+			`<!-- wp:ulcar/carousel {"ids":[${ ids
 				.slice( 0, 2 )
 				.join( ',' ) }],"ariaLabel":"\\u0022 onload=\\u0022alert(1)"} /-->`,
 	},

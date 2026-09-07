@@ -17,7 +17,7 @@ test.describe( 'accessibility', () => {
 
 		const results = await new AxeBuilder( { page } )
 			.withTags( [ 'wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa' ] )
-			.include( '.wp-block-hcfd-carousel' )
+			.include( '.wp-block-ulcar-carousel' )
 			.analyze();
 
 		expect( results.violations.map( ( v ) => `${ v.id }: ${ v.help }` ) ).toEqual( [] );
@@ -31,13 +31,13 @@ test.describe( 'accessibility', () => {
 		await waitForBurst( page, FIXTURES.many.slides );
 		await page.evaluate( () =>
 			document
-				.querySelectorAll( '.hcfd-slide img' )
+				.querySelectorAll( '.ulcar-slide img' )
 				.forEach( ( image ) => image.removeAttribute( 'alt' ) )
 		);
 
 		const results = await new AxeBuilder( { page } )
 			.withTags( [ 'wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa' ] )
-			.include( '.wp-block-hcfd-carousel' )
+			.include( '.wp-block-ulcar-carousel' )
 			.analyze();
 
 		expect( results.violations.map( ( v ) => v.id ) ).toContain( 'image-alt' );
@@ -51,7 +51,7 @@ test.describe( 'accessibility', () => {
 		// and with nothing for the visitor to press, there is no moment at which
 		// announcing one would be a reply to anything they did.
 		const announcing = await page.evaluate( () =>
-			[ ...document.querySelectorAll( '.wp-block-hcfd-carousel, .wp-block-hcfd-carousel *' ) ]
+			[ ...document.querySelectorAll( '.wp-block-ulcar-carousel, .wp-block-ulcar-carousel *' ) ]
 				.map( ( el ) => el.getAttribute( 'aria-live' ) )
 				.filter( ( value ) => null !== value && 'off' !== value )
 		);
@@ -65,14 +65,14 @@ test.describe( 'accessibility', () => {
 
 		const reachable = await page.evaluate(
 			() =>
-				[ ...document.querySelectorAll( '.hcfd-slide[hidden]' ) ].flatMap( ( slide ) => [
+				[ ...document.querySelectorAll( '.ulcar-slide[hidden]' ) ].flatMap( ( slide ) => [
 					...slide.querySelectorAll( 'a, button, input, [tabindex]' ),
 				] ).length
 		);
 
 		// An opacity-0 slide would stay focusable and stay readable.
 		expect( reachable ).toBe( 0 );
-		await expect( page.locator( '.hcfd-slide[hidden]' ).first() ).toBeHidden();
+		await expect( page.locator( '.ulcar-slide[hidden]' ).first() ).toBeHidden();
 	} );
 
 	test( 'reduced motion stops it, and the same run proves it would have moved', async ( {
@@ -111,7 +111,7 @@ test.describe( 'accessibility', () => {
 		await waitForBurst( page, FIXTURES.many.slides );
 
 		const labels: string[] = await page.evaluate( () =>
-			[ ...document.querySelectorAll( '.hcfd-track > .hcfd-slide' ) ].map( ( s ) =>
+			[ ...document.querySelectorAll( '.ulcar-track > .ulcar-slide' ) ].map( ( s ) =>
 				s.getAttribute( 'aria-label' )
 			)
 		);

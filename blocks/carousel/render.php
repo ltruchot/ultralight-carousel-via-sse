@@ -8,38 +8,38 @@
  *
  * In scope, provided by WordPress: $attributes, $content, $block.
  *
- * @package HypermediaCarouselForDatastar
+ * @package UltralightCarouselViaSse
  */
 
-use HCFD\Block;
-use HCFD\Settings;
-use HCFD\Slides;
+use ULCAR\Block;
+use ULCAR\Settings;
+use ULCAR\Slides;
 
 defined( 'ABSPATH' ) || exit;
 
-$hcfd_ids  = Slides::sanitize_ids( (array) ( $attributes['ids'] ?? array() ) );
-$hcfd_size = Slides::sanitize_size( (string) ( $attributes['sizeSlug'] ?? 'large' ) );
-$hcfd_n    = count( $hcfd_ids );
+$ulcar_ids  = Slides::sanitize_ids( (array) ( $attributes['ids'] ?? array() ) );
+$ulcar_size = Slides::sanitize_size( (string) ( $attributes['sizeSlug'] ?? 'large' ) );
+$ulcar_n    = count( $ulcar_ids );
 
 // No images, nothing at all. Not an empty box, not a placeholder: a carousel
 // with no photographs has nothing to say on a live site.
-if ( 0 === $hcfd_n ) {
+if ( 0 === $ulcar_n ) {
 	return '';
 }
 
-$hcfd_label = trim( (string) ( $attributes['ariaLabel'] ?? '' ) );
+$ulcar_label = trim( (string) ( $attributes['ariaLabel'] ?? '' ) );
 
-if ( '' === $hcfd_label ) {
-	$hcfd_label = __( 'Image carousel', 'hypermedia-carousel-for-datastar' );
+if ( '' === $ulcar_label ) {
+	$ulcar_label = __( 'Image carousel', 'ultralight-carousel-via-sse' );
 }
 
-$hcfd_dom_id = Slides::dom_id( $hcfd_ids, $hcfd_size, Block::next_instance() );
-$hcfd_signal = Slides::signal_key( $hcfd_dom_id );
+$ulcar_dom_id = Slides::dom_id( $ulcar_ids, $ulcar_size, Block::next_instance() );
+$ulcar_signal = Slides::signal_key( $ulcar_dom_id );
 
 /*
  * The cross-fade, or the absence of one.
  *
- * The stylesheet owns the fade and reads its length from --hcfd-fade, so
+ * The stylesheet owns the fade and reads its length from --ulcar-fade, so
  * turning the setting off is one declaration rather than a second code path:
  * zero is a cut. A theme that wants another length sets the same property.
  *
@@ -50,8 +50,8 @@ $hcfd_signal = Slides::signal_key( $hcfd_dom_id );
  * the attribute NAME; a custom property has no such constraint, and putting it
  * here keeps the swap correct even if the burst never arrives.
  */
-$hcfd_fade = sprintf(
-	' style="--hcfd-fade:%dms"',
+$ulcar_fade = sprintf(
+	' style="--ulcar-fade:%dms"',
 	'fade' === Settings::transition() ? Settings::duration() : 0
 );
 
@@ -61,40 +61,45 @@ $hcfd_fade = sprintf(
  * front end. Left alone, the author would see one image and no way to tell
  * whether the other six were saved. So the preview shows the whole selection,
  * flat, with no behaviour attached.
+ *
+ * The test is broader than the editor: any REST render gets this branch, a
+ * headless front end reading `content.rendered` included. That is the right
+ * answer there too -- such a client has no Datastar to finish the job, and a
+ * complete static carousel is what it can use.
  */
-$hcfd_is_preview = defined( 'REST_REQUEST' ) && REST_REQUEST;
+$ulcar_is_preview = wp_is_serving_rest_request();
 
 // One image never rotates, so it needs no shell and no stream.
-$hcfd_is_static = $hcfd_is_preview || 1 === $hcfd_n;
+$ulcar_is_static = $ulcar_is_preview || 1 === $ulcar_n;
 
-$hcfd_wrapper = get_block_wrapper_attributes(
-	array( 'class' => 'hcfd' . ( $hcfd_is_preview ? ' hcfd--preview' : '' ) )
+$ulcar_wrapper = get_block_wrapper_attributes(
+	array( 'class' => 'ulcar' . ( $ulcar_is_preview ? ' ulcar--preview' : '' ) )
 );
 
-if ( $hcfd_is_static ) {
+if ( $ulcar_is_static ) {
 	printf(
-		'<div %1$s><div class="hcfd-track">%2$s</div></div>',
-		$hcfd_wrapper, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built by get_block_wrapper_attributes().
-		Slides::render_slides( $hcfd_ids, $hcfd_size ) // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built by Slides, which escapes.
+		'<div %1$s><div class="ulcar-track">%2$s</div></div>',
+		$ulcar_wrapper, // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built by get_block_wrapper_attributes().
+		Slides::render_slides( $ulcar_ids, $ulcar_size ) // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built by Slides, which escapes.
 	);
 	return;
 }
 
-$hcfd_ids_csv = implode( ',', $hcfd_ids );
+$ulcar_ids_csv = implode( ',', $ulcar_ids );
 
 /*
  * Not esc_url(): it turns "&" into "&#038;", and the single esc_attr() applied
  * to the whole expression below would then encode the ampersand a second time.
  * The URL is our own, built from rest_url(), and carries nothing a user typed.
  */
-$hcfd_stream = add_query_arg(
+$ulcar_stream = add_query_arg(
 	array(
-		'ids'    => $hcfd_ids_csv,
-		'size'   => $hcfd_size,
-		'target' => $hcfd_dom_id,
-		'token'  => Slides::token( $hcfd_ids_csv, $hcfd_size, $hcfd_dom_id ),
+		'ids'    => $ulcar_ids_csv,
+		'size'   => $ulcar_size,
+		'target' => $ulcar_dom_id,
+		'token'  => Slides::token( $ulcar_ids_csv, $ulcar_size, $ulcar_dom_id ),
 	),
-	rest_url( 'hcfd/v1/slides' )
+	rest_url( 'ulcar/v1/slides' )
 );
 
 /*
@@ -105,10 +110,10 @@ $hcfd_stream = add_query_arg(
  * `loaded` guards against a second burst: were data-init to run again, an
  * append would duplicate every slide.
  */
-$hcfd_signals = wp_json_encode(
+$ulcar_signals = wp_json_encode(
 	array(
-		'hcfd' => array(
-			substr( $hcfd_signal, strlen( 'hcfd.' ) ) => array(
+		'ulcar' => array(
+			substr( $ulcar_signal, strlen( 'ulcar.' ) ) => array(
 				'view'   => 0,
 				'count'  => 1,
 				'loaded' => false,
@@ -117,22 +122,37 @@ $hcfd_signals = wp_json_encode(
 	)
 );
 
-$hcfd_init = sprintf(
-	'!$%1$s.loaded && @get(\'%2$s\')',
-	$hcfd_signal,
-	$hcfd_stream
+/*
+ * Two options on the request, and each one closes a hole that was measured.
+ *
+ * `payload: {}` -- by default @get appends EVERY signal on the page to the
+ * query string. Alone, that is fifty bytes of this block's own state. But the
+ * readme tells a site that already runs Datastar to share one runtime, and
+ * then whatever another plugin binds -- a search field, a password -- would
+ * ride along into this site's access logs. The route reads no signals at all.
+ *
+ * `openWhenHidden: true` -- a GET is otherwise ABORTED when the tab is hidden
+ * and re-issued when it shows again. Open a page in a background tab, switch
+ * to it while the burst is in flight, and the slides are appended twice: the
+ * `loaded` guard cannot help, it is the same request restarting. The burst is
+ * tiny and closes at once, so there is nothing to save by holding it back.
+ */
+$ulcar_init = sprintf(
+	'!$%1$s.loaded && @get(\'%2$s\', {payload: {}, openWhenHidden: true})',
+	$ulcar_signal,
+	$ulcar_stream
 );
 ?>
-<div <?php echo $hcfd_wrapper; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built by get_block_wrapper_attributes(). ?>>
+<div <?php echo $ulcar_wrapper; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built by get_block_wrapper_attributes(). ?>>
 	<div
-		id="<?php echo esc_attr( $hcfd_dom_id ); ?>"
-		class="hcfd-carousel"
+		id="<?php echo esc_attr( $ulcar_dom_id ); ?>"
+		class="ulcar-carousel"
 		role="region"
-		aria-roledescription="<?php esc_attr_e( 'carousel', 'hypermedia-carousel-for-datastar' ); ?>"
-		aria-label="<?php echo esc_attr( $hcfd_label ); ?>"
-		<?php echo $hcfd_fade; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- a literal chosen above, not data. ?>
-		data-signals="<?php echo esc_attr( (string) $hcfd_signals ); ?>"
-		data-init__delay.500ms="<?php echo esc_attr( $hcfd_init ); ?>"
+		aria-roledescription="<?php esc_attr_e( 'carousel', 'ultralight-carousel-via-sse' ); ?>"
+		aria-label="<?php echo esc_attr( $ulcar_label ); ?>"
+		<?php echo $ulcar_fade; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- a literal chosen above, not data. ?>
+		data-signals="<?php echo esc_attr( (string) $ulcar_signals ); ?>"
+		data-init__delay.500ms="<?php echo esc_attr( $ulcar_init ); ?>"
 	>
 		<?php
 		/*
@@ -153,9 +173,9 @@ $hcfd_init = sprintf(
 		 * either way.
 		 */
 		?>
-		<div class="hcfd-track">
+		<div class="ulcar-track">
 			<?php
-			echo Slides::render_slide( $hcfd_ids[0], $hcfd_size, 0, $hcfd_n, $hcfd_signal ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built by Slides, which escapes.
+			echo Slides::render_slide( $ulcar_ids[0], $ulcar_size, 0, $ulcar_n, $ulcar_signal ); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- built by Slides, which escapes.
 			?>
 		</div>
 
@@ -168,6 +188,6 @@ $hcfd_init = sprintf(
 		 * NAME, so no signal could have carried it.
 		 */
 		?>
-		<div id="<?php echo esc_attr( $hcfd_dom_id ); ?>-cadence" hidden></div>
+		<div id="<?php echo esc_attr( $ulcar_dom_id ); ?>-cadence" hidden></div>
 	</div>
 </div>

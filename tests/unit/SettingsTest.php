@@ -2,20 +2,20 @@
 /**
  * Unit tests for the one setting the plugin has.
  *
- * @package HypermediaCarouselForDatastar
+ * @package UltralightCarouselViaSse
  */
 
 declare(strict_types=1);
 
-namespace HCFD\Tests;
+namespace ULCAR\Tests;
 
 use Brain\Monkey;
 use Brain\Monkey\Functions;
-use HCFD\Settings;
+use ULCAR\Settings;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers \HCFD\Settings
+ * @covers \ULCAR\Settings
  */
 final class SettingsTest extends TestCase {
 
@@ -201,7 +201,7 @@ final class SettingsTest extends TestCase {
 
 		// First, not last: that is where core and well-behaved plugins put it,
 		// and where a hand goes looking.
-		$this->assertStringContainsString( 'options-general.php?page=hcfd', $links[0] );
+		$this->assertStringContainsString( 'options-general.php?page=ulcar', $links[0] );
 		$this->assertStringContainsString( '<a href=', $links[0] );
 
 		// And nothing already there was dropped on the way.

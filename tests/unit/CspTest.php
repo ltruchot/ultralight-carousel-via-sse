@@ -2,20 +2,20 @@
 /**
  * Unit tests for the CSP nonce bridge.
  *
- * @package HypermediaCarouselForDatastar
+ * @package UltralightCarouselViaSse
  */
 
 declare(strict_types=1);
 
-namespace HCFD\Tests;
+namespace ULCAR\Tests;
 
 use Brain\Monkey;
 use Brain\Monkey\Functions;
-use HCFD\Csp;
+use ULCAR\Csp;
 use PHPUnit\Framework\TestCase;
 
 /**
- * @covers \HCFD\Csp
+ * @covers \ULCAR\Csp
  */
 final class CspTest extends TestCase {
 
@@ -36,7 +36,7 @@ final class CspTest extends TestCase {
 	 */
 	private function given_site_nonce( string $nonce ): void {
 		Functions\when( 'apply_filters' )->alias(
-			static fn( $hook, $value ) => 'hcfd_csp_nonce' === $hook ? $nonce : $value
+			static fn( $hook, $value ) => 'ulcar_csp_nonce' === $hook ? $nonce : $value
 		);
 	}
 

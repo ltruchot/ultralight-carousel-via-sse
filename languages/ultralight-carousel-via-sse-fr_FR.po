@@ -1,0 +1,253 @@
+# Copyright (C) 2026 Loïc Truchot
+# This file is distributed under the GPL v2 or later.
+msgid ""
+msgstr ""
+"Project-Id-Version: Ultralight Carousel via SSE 0.6.0\n"
+"Report-Msgid-Bugs-To: https://github.com/ltruchot/ultralight-carousel-via-sse/issues\n"
+"POT-Creation-Date: 2026-09-07T15:46:07+00:00\n"
+"PO-Revision-Date: 2026-09-07 18:00+0200\n"
+"Last-Translator: Loïc Truchot\n"
+"Language-Team: Français\n"
+"Language: fr_FR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: ultralight-carousel-via-sse\n"
+
+#. Plugin Name of the plugin
+#: ultralight-carousel-via-sse.php
+msgid "Ultralight Carousel via SSE"
+msgstr "Diaporama ultraléger via SSE"
+
+#. Plugin URI of the plugin
+#: ultralight-carousel-via-sse.php
+msgid "https://github.com/ltruchot/ultralight-carousel-via-sse"
+msgstr ""
+
+#. Description of the plugin
+#: ultralight-carousel-via-sse.php
+msgid "A carousel that streams its slides over Server-Sent Events: the page ships one image, the first paint stays fast, and without JavaScript that image still shows."
+msgstr "Un diaporama qui envoie ses images par Server-Sent Events : la page ne charge qu’une image, le premier affichage reste rapide, et sans JavaScript cette image s’affiche quand même."
+
+#. Author of the plugin
+#: ultralight-carousel-via-sse.php
+msgid "Loïc Truchot"
+msgstr ""
+
+#. Author URI of the plugin
+#: ultralight-carousel-via-sse.php
+msgid "https://github.com/ltruchot"
+msgstr ""
+
+#: blocks/carousel/render.php:33
+msgid "Image carousel"
+msgstr "Diaporama d’images"
+
+#: blocks/carousel/render.php:151
+msgid "carousel"
+msgstr "diaporama"
+
+#: includes/class-settings.php:99
+msgid "Settings"
+msgstr "Réglages"
+
+#. translators: 1: shortest allowed interval, 2: longest allowed interval, both in seconds.
+#: includes/class-settings.php:141
+#, php-format
+msgid "The rotation interval must be between %1$s and %2$s seconds. Your value was adjusted."
+msgstr "La durée d’affichage doit être comprise entre %1$s et %2$s secondes. Votre valeur a été ajustée."
+
+#. translators: 1: shortest allowed cross-fade, 2: longest allowed cross-fade, both in milliseconds.
+#: includes/class-settings.php:158
+#, php-format
+msgid "The cross-fade must last between %1$d and %2$d milliseconds. Your value was adjusted."
+msgstr "Le fondu doit durer entre %1$d et %2$d millisecondes. Votre valeur a été ajustée."
+
+#: includes/class-settings.php:288 includes/class-settings.php:289
+#: blocks/carousel/index.js:186
+msgid "Ultralight Carousel"
+msgstr "Diaporama ultraléger"
+
+#: includes/class-settings.php:319
+msgid "Time on screen"
+msgstr "Temps d’affichage"
+
+#: includes/class-settings.php:328
+msgid "Transition between slides"
+msgstr "Transition entre les diapositives"
+
+#: includes/class-settings.php:337
+msgid "Transition length"
+msgstr "Durée de la transition"
+
+#: includes/class-settings.php:351
+msgid "Images are picked in the block itself. These settings apply to every carousel on the site."
+msgstr "Les images se choisissent dans le bloc lui-même. Ces réglages s’appliquent à tous les diaporamas du site."
+
+#: includes/class-settings.php:372
+msgid "s"
+msgstr "s"
+
+#. translators: 1: shortest allowed interval, 2: longest allowed interval, both in seconds.
+#: includes/class-settings.php:378
+#, php-format
+msgid "Between %1$s and %2$s seconds, in half-second steps. A carousel with a single image never rotates."
+msgstr "Entre %1$s et %2$s secondes, par demi-secondes. Un diaporama d’une seule image ne tourne jamais."
+
+#: includes/class-settings.php:404
+msgid "ms"
+msgstr "ms"
+
+#. translators: 1: shortest allowed cross-fade, 2: longest allowed cross-fade, both in milliseconds.
+#: includes/class-settings.php:410
+#, php-format
+msgid "Between %1$d and %2$d milliseconds. Ignored when the transition is off."
+msgstr "Entre %1$d et %2$d millisecondes. Sans effet si la transition est désactivée."
+
+#: includes/class-settings.php:418
+msgid "Clear your page cache after changing this: cached pages keep the old length."
+msgstr "Videz le cache de pages après avoir changé cette valeur : les pages en cache gardent l’ancienne durée."
+
+#: includes/class-settings.php:428
+msgid "Cross-fade"
+msgstr "Fondu enchaîné"
+
+#: includes/class-settings.php:429
+msgid "None, the image just switches"
+msgstr "Aucune, l’image change d’un coup"
+
+#: includes/class-settings.php:441
+msgid "Visitors who asked their system for reduced motion never get a transition."
+msgstr "Les visiteurs qui ont demandé un mouvement réduit à leur système n’ont jamais de transition."
+
+#: includes/class-slides.php:222
+msgid "slide"
+msgstr "image"
+
+#. translators: 1: slide number, 2: total number of slides.
+#: includes/class-slides.php:226
+#, php-format
+msgid "%1$d of %2$d"
+msgstr "%1$d sur %2$d"
+
+#: includes/class-sse-endpoint.php:120
+msgid "This carousel request was not issued by this site."
+msgstr "Cette demande de diaporama n’a pas été émise par ce site."
+
+#. translators: 1: required PHP version, 2: required WordPress version.
+#: ultralight-carousel-via-sse.php:58
+#, php-format
+msgid "Ultralight Carousel via SSE requires PHP %1$s and WordPress %2$s or later."
+msgstr "Diaporama ultraléger via SSE demande PHP %1$s et WordPress %2$s ou plus récents."
+
+#: blocks/carousel/index.js:31
+msgid "Thumbnail"
+msgstr "Miniature"
+
+#: blocks/carousel/index.js:32
+msgid "Medium"
+msgstr "Moyenne"
+
+#: blocks/carousel/index.js:33
+msgid "Large"
+msgstr "Grande"
+
+#: blocks/carousel/index.js:34
+msgid "Full size"
+msgstr "Taille originale"
+
+#. translators: button on the block toolbar; %d is how many images the carousel holds.
+#: blocks/carousel/index.js:91
+msgid "Images (%d)"
+msgid_plural "Images (%d)"
+msgstr[0] "Images (%d)"
+msgstr[1] "Images (%d)"
+
+#: blocks/carousel/index.js:120
+msgid "Carousel"
+msgstr "Diaporama"
+
+#. translators: %d: the most images one carousel can hold.
+#: blocks/carousel/index.js:127
+msgid "A carousel holds at most %d images. Only the first ones are shown; the rest are ignored."
+msgstr "Un diaporama contient au plus %d images. Seules les premières sont affichées ; les autres sont ignorées."
+
+#: blocks/carousel/index.js:133
+msgid "Image size"
+msgstr "Taille des images"
+
+#: blocks/carousel/index.js:142
+msgid "Accessible name"
+msgstr "Nom accessible"
+
+#: blocks/carousel/index.js:143
+msgid "Read by screen readers, for example “Life at the school”. Leave empty for a generic name."
+msgstr "Lu par les lecteurs d’écran, par exemple « La vie à l’école ». Laisser vide pour un nom générique."
+
+#: blocks/carousel/index.js:155
+msgid "Add or remove images"
+msgstr "Ajouter ou retirer des images"
+
+#: blocks/carousel/index.js:156
+msgid "Add images"
+msgstr "Ajouter des images"
+
+#: blocks/carousel/index.js:162
+msgid "Pick them in the Media Library, like a Gallery. The order you pick is the order they rotate in."
+msgstr "Choisissez-les dans la médiathèque, comme pour une galerie. L’ordre choisi est l’ordre de défilement."
+
+#: blocks/carousel/index.js:167
+msgid "Rotation speed and cross-fade are set for the whole site, under Settings → Ultralight Carousel."
+msgstr "La vitesse de défilement et le fondu se règlent pour tout le site, dans Réglages → Diaporama ultraléger."
+
+#: blocks/carousel/index.js:187
+msgid "Pick the images to rotate through. One image never rotates; two or more do."
+msgstr "Choisissez les images à faire défiler. Une seule image ne tourne jamais ; deux ou plus, si."
+
+#: blocks/carousel/block.json
+msgctxt "block title"
+msgid "Ultralight Carousel"
+msgstr "Diaporama ultraléger"
+
+#: blocks/carousel/block.json
+msgctxt "block description"
+msgid "Streams its slides over Server-Sent Events. The page ships one image, fast and uncluttered; without JavaScript the first image still shows."
+msgstr "Envoie ses images par Server-Sent Events. La page ne charge qu’une image, vite et sans surcharge ; sans JavaScript, la première image s’affiche quand même."
+
+#: blocks/carousel/block.json
+msgctxt "block keyword"
+msgid "carousel"
+msgstr "carousel"
+
+#: blocks/carousel/block.json
+msgctxt "block keyword"
+msgid "slideshow"
+msgstr "diaporama"
+
+#: blocks/carousel/block.json
+msgctxt "block keyword"
+msgid "gallery"
+msgstr "galerie"
+
+#: blocks/carousel/block.json
+msgctxt "block keyword"
+msgid "slider"
+msgstr "carrousel"
+
+#~ msgid "An image carousel that ships one slide in the page and streams the rest over Server-Sent Events."
+#~ msgstr "Un diaporama qui met une seule image dans la page et pousse les suivantes en Server-Sent Events."
+
+#~ msgid "A page already in a cache keeps the length it was rendered with, so clear the cache after changing this."
+#~ msgstr "Une page déjà en cache garde la durée avec laquelle elle a été rendue : videz le cache après avoir changé ce réglage."
+
+#~ msgid "Cross-fade — one slide fades into the next"
+#~ msgstr "Fondu enchaîné — une image se fond dans la suivante"
+
+#~ msgid "None — the slide is simply replaced"
+#~ msgstr "Aucune — l’image est simplement remplacée"
+
+#~ msgctxt "block description"
+#~ msgid "Ships one slide in the page and streams the rest over Server-Sent Events, so a carousel costs what a single image costs."
+#~ msgstr "Met une seule image dans la page et pousse les suivantes en Server-Sent Events : le diaporama ne coûte alors que ce que coûte une image."

@@ -3,18 +3,18 @@
  * @copyright Copyright (c) PutYourLightsOn
  */
 
-namespace HCFD\Datastar;
+namespace ULCAR\Datastar;
 
 defined( 'ABSPATH' ) || exit;
 
-use HCFD\Datastar\enums\ElementPatchMode;
-use HCFD\Datastar\enums\NamespaceType;
-use HCFD\Datastar\events\EventInterface;
-use HCFD\Datastar\events\ExecuteScript;
-use HCFD\Datastar\events\Location;
-use HCFD\Datastar\events\PatchElements;
-use HCFD\Datastar\events\PatchSignals;
-use HCFD\Datastar\events\RemoveElements;
+use ULCAR\Datastar\enums\ElementPatchMode;
+use ULCAR\Datastar\enums\NamespaceType;
+use ULCAR\Datastar\events\EventInterface;
+use ULCAR\Datastar\events\ExecuteScript;
+use ULCAR\Datastar\events\Location;
+use ULCAR\Datastar\events\PatchElements;
+use ULCAR\Datastar\events\PatchSignals;
+use ULCAR\Datastar\events\RemoveElements;
 
 class ServerSentEventGenerator
 {
@@ -33,6 +33,7 @@ class ServerSentEventGenerator
 
         // Connection-specific headers are only allowed in HTTP/1.1.
         // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Connection
+        // phpcs:ignore WordPress.Security.ValidatedSanitizedInput -- compared to a literal below and never output, stored or used to build anything.
         $protocol = $_SERVER['SERVER_PROTOCOL'] ?? null;
         if ($protocol === 'HTTP/1.1') {
             $headers['Connection'] = 'keep-alive';
@@ -138,6 +139,7 @@ class ServerSentEventGenerator
     protected function sendEvent(EventInterface $event): string
     {
         $output = $event->getOutput();
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- this echo IS the SSE frame; escaping happened where the markup was composed, in ULCAR\Slides.
         echo $output;
 
         if (ob_get_contents()) {

@@ -1,6 +1,6 @@
 {
-	"name": "ltruchot/hypermedia-carousel-for-datastar",
-	"description": "An image carousel that ships one slide in the page and streams the rest over Server-Sent Events.",
+	"name": "ltruchot/ultralight-carousel-via-sse",
+	"description": "A carousel that streams its slides over Server-Sent Events: the page ships one image, the first paint stays fast, and without JavaScript that image still shows.",
 	"type": "wordpress-plugin",
 	"license": "GPL-2.0-or-later",
 	"require": {

@@ -11,7 +11,7 @@
  *   1. the slides are stacked, so two of them can be on screen at once;
  *   2. the one leaving fades out on top of the one arriving.
  *
- * One custom property is published as a hook: `--hcfd-fade`, the length of that
+ * One custom property is published as a hook: `--ulcar-fade`, the length of that
  * cross-fade. A theme may set it; the plugin sets it to zero when the setting
  * says no transition.
  *
@@ -30,7 +30,7 @@
  * cannot escape a mask, and needs no global rule. It is also less code.
  */
 
-.wp-block-hcfd-carousel .hcfd-track {
+.wp-block-ulcar-carousel .ulcar-track {
 	/*
 	 * Every slide in one cell.
 	 *
@@ -41,7 +41,7 @@
 	display: grid;
 }
 
-.wp-block-hcfd-carousel .hcfd-slide {
+.wp-block-ulcar-carousel .ulcar-slide {
 	grid-area: 1 / 1;
 	opacity: 1;
 	visibility: visible;
@@ -79,7 +79,7 @@
 	 */
 }
 
-.wp-block-hcfd-carousel .hcfd-slide[hidden] {
+.wp-block-ulcar-carousel .ulcar-slide[hidden] {
 	/*
 	 * `display` is put back, and `visibility` carries the meaning instead.
 	 *
@@ -115,8 +115,8 @@
 	z-index: 1;
 
 	transition:
-		opacity var(--hcfd-fade, 1000ms) ease,
-		visibility var(--hcfd-fade, 1000ms);
+		opacity var(--ulcar-fade, 1000ms) ease,
+		visibility var(--ulcar-fade, 1000ms);
 }
 
 /*
@@ -128,7 +128,7 @@
  * drives by writing the signal itself.
  */
 @media (prefers-reduced-motion: reduce) {
-	.wp-block-hcfd-carousel .hcfd-slide[hidden] {
+	.wp-block-ulcar-carousel .ulcar-slide[hidden] {
 		transition-duration: 0s;
 	}
 }

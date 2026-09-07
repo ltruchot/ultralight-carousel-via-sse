@@ -2,10 +2,10 @@
 /**
  * Lets a site with a Content-Security-Policy run the carousel.
  *
- * @package HypermediaCarouselForDatastar
+ * @package UltralightCarouselViaSse
  */
 
-namespace HCFD;
+namespace ULCAR;
 
 defined( 'ABSPATH' ) || exit;
 
@@ -32,7 +32,7 @@ final class Csp {
 	 * @return string Nonce for this response, or '' when the site has no CSP.
 	 */
 	public static function nonce(): string {
-		return (string) apply_filters( 'hcfd_csp_nonce', '' );
+		return (string) apply_filters( 'ulcar_csp_nonce', '' );
 	}
 
 	/**

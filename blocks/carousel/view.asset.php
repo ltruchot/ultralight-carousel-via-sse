@@ -10,10 +10,10 @@
  * diagnostics work if Datastar is missing -- view.js imports nothing from it on
  * purpose, so it still runs and still reports when the runtime never arrives.
  *
- * @package HypermediaCarouselForDatastar
+ * @package UltralightCarouselViaSse
  */
 
 return array(
-	'dependencies' => array( 'hcfd-datastar' ),
-	'version'      => '0.5.1',
+	'dependencies' => array( 'ulcar-datastar' ),
+	'version'      => '0.6.0',
 );

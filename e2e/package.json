@@ -1,5 +1,5 @@
 {
-	"name": "hypermedia-carousel-for-datastar-e2e",
+	"name": "ultralight-carousel-via-sse-e2e",
 	"private": true,
 	"description": "End-to-end suite. Drives a real browser against a real WordPress site.",
 	"scripts": {
@@ -8,7 +8,7 @@
 		"report": "playwright show-report"
 	},
 	"devDependencies": {
-		"@playwright/test": "^1.49.0",
+		"@playwright/test": "1.62.1",
 		"@axe-core/playwright": "^4.10.0"
 	}
 }

@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256" role="img" aria-label="Ultralight Carousel via SSE">
+  <!--
+    The listing icon. One photograph in the frame, the next one arriving
+    over it: that is the whole plugin. The three bars on the right are the
+    stream. The cross-fade is the only animation, slow, and the PNG beside
+    this file is the still version the directory falls back to.
+  -->
+  <rect width="256" height="256" rx="56" fill="#111827"/>
+
+  <!-- the frame -->
+  <rect x="40" y="56" width="152" height="144" rx="14" fill="#f9fafb"/>
+
+  <!-- photograph A: hills and a sun -->
+  <g id="a">
+    <rect x="52" y="68" width="128" height="120" rx="8" fill="#dbeafe"/>
+    <circle cx="150" cy="98" r="14" fill="#f59e0b"/>
+    <path d="M52 188 L52 156 L92 118 L124 150 L146 130 L180 164 L180 188 Z" fill="#3b82f6"/>
+    <path d="M52 188 L52 168 L80 142 L112 172 L132 156 L180 188 Z" fill="#1d4ed8"/>
+    <animate attributeName="opacity" values="1;1;0;0;1" keyTimes="0;0.45;0.55;0.95;1" dur="8s" repeatCount="indefinite"/>
+  </g>
+
+  <!-- photograph B: sea and a moon, fading in over A -->
+  <g id="b" opacity="0">
+    <rect x="52" y="68" width="128" height="120" rx="8" fill="#fde68a"/>
+    <circle cx="82" cy="100" r="12" fill="#f9fafb"/>
+    <path d="M52 188 L52 150 Q84 136 116 150 T180 150 L180 188 Z" fill="#0ea5e9"/>
+    <path d="M52 188 L52 166 Q84 154 116 166 T180 166 L180 188 Z" fill="#0369a1"/>
+    <animate attributeName="opacity" values="0;0;1;1;0" keyTimes="0;0.45;0.55;0.95;1" dur="8s" repeatCount="indefinite"/>
+  </g>
+
+  <!-- the stream: three bars coming in from the right -->
+  <g fill="#60a5fa">
+    <rect x="204" y="96" width="12" height="16" rx="4"/>
+    <rect x="204" y="120" width="12" height="16" rx="4"/>
+    <rect x="204" y="144" width="12" height="16" rx="4"/>
+  </g>
+</svg>

@@ -10,6 +10,13 @@ node_modules/
 /vendor/
 *.zip
 
+# Agent scaffolding: instructions for the assistant that maintains this
+# repository, and their lock file. Not part of the plugin, and kept out of the
+# ZIP by .distignore as well -- both files, or one day one of them ships.
+/.agents/
+/skills-lock.json
+/.claude/skills/wp-plugin-development
+
 # PHPUnit
 .phpunit.result.cache
 
@@ -17,3 +24,6 @@ node_modules/
 e2e/test-results/
 e2e/playwright-report/
 e2e/blob-report/
+
+# Loose files dropped at the root while working (a logo pack, a screenshot).
+/raw/

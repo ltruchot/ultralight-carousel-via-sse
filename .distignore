@@ -6,6 +6,7 @@
 /.gitignore
 /.github
 /.claude
+/.wordpress-org
 /.distignore
 /bin
 /tests
@@ -17,8 +18,20 @@
 /phpcs.xml.dist
 /CONTRIBUTING.md
 
+# Agent scaffolding. Neither is code the plugin runs: the first is a set of
+# instructions for the assistant that maintains this repository, the second its
+# lock file. A hidden directory inside wp-content/plugins is an error for Plugin
+# Check, and rightly so.
+/.agents
+/skills-lock.json
+# Loose files dropped at the root while working (a logo pack, a screenshot).
+/raw
+
 # Tool leftovers. Anything ignored by git but not by this file would ship from
 # a working copy without ever appearing in a clean checkout -- which is how a
 # PHPUnit cache file ends up in somebody's wp-content.
 /.phpunit.result.cache
 /.DS_Store
+/node_modules
+# A ZIP built at the root would otherwise ship inside the next one.
+/*.zip

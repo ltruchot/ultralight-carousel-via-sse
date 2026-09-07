@@ -1,212 +1,166 @@
-=== Hypermedia Carousel for Datastar ===
+=== Ultralight Carousel via SSE ===
 Contributors: ltruchot
-Tags: carousel, slideshow, gallery, images, accessibility
+Tags: carousel, slideshow, gallery, images, performance
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 8.1
-Stable tag: 0.5.1
+Stable tag: 0.6.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-A carousel that puts one image in the page and streams the rest, so it costs what a single image costs.
+A light image carousel. The page loads one image, the others stream in after. Fast first paint, and it still works without JavaScript.
 
 == Description ==
 
-A carousel usually makes you pay for every slide on every page view. Five photographs in the
-markup are five photographs the browser has to reckon with before it can settle the layout, and
-the first one — the one people actually see — waits its turn.
+A carousel usually puts every image in the page. This one puts **one**. The others arrive a
+moment later over Server-Sent Events (SSE), then the slideshow runs in the browser.
 
-This block ships **one slide**. The rest arrive a moment later, in a single Server-Sent Events
-burst, and the rotation then runs in the browser.
+What you get:
 
-= What that buys you =
+* **A fast first paint.** The page loads with a single image, so nothing else slows it down.
+* **Nothing breaks.** If JavaScript is off, or a visitor asked their system for reduced motion,
+  the page looks normal. The first image is there. It just does not rotate.
+* **A simple, modern way to do a carousel.** No jQuery, no CDN, no library to configure.
+* **Free and open source.** GPL, no paid version, no account, no tracking. Use it on any site.
 
-* **The first paint carries one image.** Nothing else competes with it.
-* **A cached page stays correct.** The HTML a caching layer froze last week still shows the right
-  first slide; the burst is never cached, so it delivers today's list and today's timing. Add a
-  photograph and it appears without purging anything.
-* **Nothing breaks when something fails.** No JavaScript, a blocked request, a strict security
-  policy: the visitor sees the first image, which is what a carousel shows most of the time
-  anyway. With JavaScript off there is no carousel at all -- just that one image, which is exactly
-  what a plain image block would have given you.
+It is built on [Datastar](https://data-star.dev/), a small hypermedia library that is bundled with
+the plugin.
 
-= How you use it =
+There are **few options** for now. If you need something specific, open an issue on
+[GitHub](https://github.com/ltruchot/ultralight-carousel-via-sse/issues) and say what you are
+trying to do.
 
-1. Add the **Hypermedia Carousel** block to a page.
-2. Pick your photographs in the Media Library, the way you would for a Gallery. The order you
-   choose is the order they rotate in.
-3. That is it. There is no third step.
+= How to use it =
 
-To change the pictures later, select the block and press **Images** in its toolbar — add one,
-remove one, reorder them. **Nothing is copied into the page**: the block stores the media IDs and
-fetches from the Media Library each time, so replacing a photograph in the library replaces it in
-every carousel that uses it, with nothing to re-save.
+1. Add the **Ultralight Carousel** block to a page.
+2. Pick your images in the Media Library, like you would for a Gallery. The order you pick is the
+   order they rotate in. Up to 50 images.
+3. Done.
 
-Two settings, under **Settings → Hypermedia Carousel**, shared by every carousel on the site: how
-long each image stays on screen, and how long the cross-fade takes. There is nothing to configure
-per carousel except the images themselves and, if you like, the name a screen reader reads out.
+To change the images later, select the block and click **Images** in its toolbar.
 
-= Honest about what it is =
+The block stores media IDs, not copies. Replace an image in the Media Library and every carousel
+that uses it is updated.
 
-This plugin trades **one extra HTTP request per page view** for a smaller first payload. On a
-page with one carousel that is a good trade. It is not a good trade if you were going to put the
-images in the markup anyway and did not care about the first paint.
+= Settings =
 
-The stream is a **single burst that closes at once** — a few hundredths of a second of PHP. It
-never holds a connection open, because on most PHP hosting one held connection is one worker
-taken out of a small pool, and a slideshow is not worth a site's capacity.
+Go to **Settings → Ultralight Carousel**. Three settings, shared by every carousel on the site:
 
-= It brings no styles of its own =
+* how long each image stays on screen (2.5 to 25 seconds);
+* whether images cross-fade or just switch;
+* how long the cross-fade takes (100 to 2000 ms).
 
-The block streams images into a container with an id and fades one into the
-next. That is all it does. It ships no sizing, no positioning, no colour and no
-icons, because only your theme knows how big the box should be and how an image
-that does not match its shape should be cropped or padded.
+= Styling =
 
-Give it a container with a size and the images will fill it.
+The block has no look of its own. No size, no colours, no arrows. Your theme decides how big the
+box is and how images are cropped. Give it a container with a size and the images fill it.
 
-= Styling hooks =
+If you style it, these are the names to use. They will not change:
 
-Since the block ships no styles, the names below are its public surface. They
-are a **contract**: they will not change without a major version and a changelog
-entry saying so, because a theme that styles them has no other way to reach the
-markup.
+* `ulcar-carousel`: the container.
+* `ulcar-track`: wraps the slides.
+* `ulcar-slide`: one slide. Slides off screen have the `hidden` attribute.
+* `--ulcar-fade`: a CSS variable with the cross-fade length.
 
-* `hcfd-carousel` — the container. Carries the id, the ARIA region and the
-  signals.
-* `hcfd-track` — wraps the slides and stacks them, so two can be on screen at
-  once during a fade.
-* `hcfd-slide` — one slide. The ones off screen carry `hidden`.
-* `--hcfd-fade` — the length of the cross-fade. The plugin writes your setting
-  here, or `0ms` when the transition is off; leave it unset in a theme and it
-  falls back to 1000ms.
+Keep one thing as it is: the slide that leaves sits on top and fades out over the next one. If
+you change `z-index` inside the track, the fade turns into a flash.
 
-Only one layer moves, and a theme should keep it that way: the slide that is
-leaving carries `hidden` and is painted on top, fading out over an incoming
-slide that is already fully opaque. Fading both at once looks like the obvious
-way to do it and is not — two half-transparent layers do not add up to an opaque
-one, so a quarter of your container shows through in the middle of the swap,
-which on a light background reads as a flash of light.
+= Accessibility: read this first =
 
-= Content-Security-Policy =
+**This carousel starts by itself and has no pause button.** No play, pause or arrows. On a page
+with other content, that fails WCAG 2.2.2 (level A). If your site must meet WCAG level A, do not
+use this plugin.
 
-It runs under a strict policy, without `unsafe-eval`, provided you hand it your page nonce
-through the `hcfd_csp_nonce` filter — see the FAQ. Without that, under such a policy, the
-carousel stays on its first image rather than breaking anything.
+What it does do: no rotation at all for visitors who asked for reduced motion; slides off screen
+are hidden from screen readers and the tab order; nothing is announced; the carousel is a named
+region and each slide says "2 of 5", with the alt text from the Media Library.
 
-= Accessibility =
+= What it costs =
 
-Read this before you install it. **This carousel starts on its own and offers no
-way to stop it.** It ships no play, pause or arrow buttons — that is deliberate,
-and it is a knowing failure of WCAG 2.2.2 (level A) on any page that carries
-other content beside it. If your site has to meet WCAG at level A, this is not
-the plugin for you, and no amount of theming will make it one.
+One extra request per carousel, per page view. The request is a single burst that closes right
+away, a few hundredths of a second of PHP. It never keeps a connection open.
 
-What it does do:
-
-* a visitor whose system asks for reduced motion gets **no rotation at all** —
-  the photograph they load is the photograph they keep. That is checked on every
-  tick, not once, so turning the setting on mid-visit is obeyed;
-* slides that are not on screen carry `hidden`, so they are out of the tab order
-  and out of the accessibility tree. An opacity-0 slide would be in both;
-* nothing is announced. There is no live region, so a screen reader is not read
-  a photograph every five seconds — and with nothing to press, there is no
-  moment at which announcing one would be a reply to anything the visitor did;
-* the carousel is a named ARIA region, every slide says its position and the
-  total, and alternative text comes from the media library exactly as written
-  there.
+Cached pages stay correct: the burst is never cached, so a deleted image disappears from every
+carousel without clearing any cache, and a new rotation speed applies right away. Adding an
+image, or changing the cross-fade length, needs the page cache cleared.
 
 == Frequently Asked Questions ==
 
-= Where do I set the speed? =
+= The carousel stays on its first image =
 
-Settings → Hypermedia Carousel. Two numbers for the whole site: how long each image stays on
-screen (2.5 to 25 seconds, by halves) and how long the cross-fade takes (100 to 2000 ms). A page
-already in a cache keeps the cross-fade length it was rendered with; the interval travels in the
-stream, which is never cached.
+Open the browser console. After five seconds the plugin says which carousel got no slides and,
+when it knows, why. The usual causes:
+
+* the REST API is restricted to logged-in users: allow the `ulcar/v1` namespace;
+* the Site Address is not the address visitors use;
+* an optimisation plugin delays or minifies `datastar-1.0.3.js`: exclude that file;
+* a strict Content-Security-Policy without the nonce filter (see below).
 
 = Does it work with a strict Content-Security-Policy? =
 
-Yes, without `unsafe-eval`, if you hand it your page nonce. Datastar 1.0.3 — the version bundled
-here — added a CSP mode: it reads a nonce from the `<html>` tag and uses it when it compiles
-expressions.
+Yes, without `unsafe-eval`, if you give it your page nonce:
 
-The plugin will not invent that nonce for you. A nonce is worth something only if the same value
-appears in the `script-src` directive of the response, and only whatever sends that header can
-guarantee the two match. So tell the plugin what it is:
+`add_filter( 'ulcar_csp_nonce', fn() => my_csp_nonce() );`
 
-`add_filter( 'hcfd_csp_nonce', fn() => my_csp_nonce() );`
-
-The plugin then adds `data-nonce` to the opening `<html>` tag, and Datastar takes it from there.
-Your own `<script>` tags still need whatever your policy requires of them — that part is not this
-plugin's to solve.
-
-Return nothing, or install nothing, and the attribute is never added. Under a policy that forbids
-`unsafe-eval`, the carousel then stays on its first image: no error a visitor can see, no broken
-layout, just a still picture.
+The plugin does not make up a nonce. It only works if the same value is in the `script-src` of the
+response, and only your CSP code knows that value.
 
 = Another plugin already loads Datastar =
 
-Two runtimes on one page freeze it -- measured, within a second: each keeps its own state, both
-answer the same attributes, neither sees the other. WordPress cannot merge them, since each
-plugin registers its own module id. The browser console names the files when it happens.
+Two copies of Datastar on one page freeze it. Point this plugin at the copy the site already
+loads. It must be the same version as the one bundled here:
 
-Point this plugin at the copy the site already loads:
+`add_filter( 'ulcar_datastar_src', fn() => 'https://example.com/datastar-1.0.3.js' );`
 
-`add_filter( 'hcfd_datastar_src', fn() => 'https://example.com/datastar-1.0.3.js' );`
+= Is the stream secure? =
 
-The version has to be the one bundled here: an older runtime does not understand the attributes
-this block writes, and a newer one is untested.
+Yes. The page carries a signature over the image list, and the stream refuses anything else. That
+proves the list was made by your site. It does not make images private: an image in the Media
+Library is public, as with the core Gallery block. If you regenerate your site's secret keys,
+clear the page cache, or cached pages keep an old signature and stay on their first image.
 
 = Does it phone home? =
 
 No. The only request it makes is to your own site.
 
-= What happens if I deactivate the plugin? =
+= I need an option that is not there =
 
-The carousel disappears and leaves nothing behind: the block is rendered on the server, so post
-content holds a block comment and no stale markup. Uninstalling removes the single option it
-stores.
+Open an issue on [GitHub](https://github.com/ltruchot/ultralight-carousel-via-sse/issues).
+
+= What happens if I deactivate or uninstall it? =
+
+Deactivating leaves nothing in your content: the page keeps a block comment and no markup.
+Uninstalling removes the single option the plugin stores.
 
 == Development ==
 
-The source lives at
-[github.com/ltruchot/hypermedia-carousel-for-datastar](https://github.com/ltruchot/hypermedia-carousel-for-datastar),
-and what is published here is that source: there is no build step, no bundler,
-and no minified file of our own. The editor script is plain ES5 written against
-`wp.element.createElement`, and the two `*.asset.php` files are written by hand.
-What you install is what you can read.
-
-The one minified file is the Datastar runtime, which is third party and ships
-with its source map beside it — see below.
-
-To run the checks:
-
-`composer install && composer exec -- phpunit` — unit tests
-`composer exec -- phpcs` — WordPress coding standards
-`cd e2e && BASE_URL=… npm test` — a real browser against a real site
+The source is at
+[github.com/ltruchot/ultralight-carousel-via-sse](https://github.com/ltruchot/ultralight-carousel-via-sse).
+What is published here is that source: no build step, no bundler. The only minified file is the
+Datastar runtime, which is third-party code and ships with its source map.
 
 == Third-party code ==
 
-This plugin bundles two pieces of [Datastar](https://data-star.dev/), both MIT licensed, both
-served from this plugin and never from a CDN:
+Two pieces of [Datastar](https://data-star.dev/), both MIT licensed, both served from this plugin:
+the browser runtime `v1.0.3`, unmodified, and the PHP SDK `1.0.1` with its namespace prefixed so
+it cannot collide with another plugin. Each folder has the upstream licence and an `UPSTREAM.md`
+with the exact version, its checksum and every change made to it.
 
-* the Datastar browser runtime, `v1.0.3`, the official build byte for byte, with its source map
-  alongside it — see `assets/vendor/datastar/UPSTREAM.md`;
-* the Datastar PHP SDK, `1.0.1`, with its namespace prefixed so it cannot collide with another
-  plugin shipping the same library — see `includes/datastar-php/UPSTREAM.md`.
+== AI label ==
 
-Both directories carry the upstream licence and a note recording the exact version, its checksum,
-and every change made to it. `bin/vendor-datastar.sh` in the source repository is what produces
-them.
+This plugin's code was written by an AI assistant, under human direction, and carries the
+European Union's "AI generated" label. The README on GitHub says how.
 
 == Changelog ==
 
-= 0.5.1 =
-* The message about two Datastar runtimes now says what actually happens.
-  Measured: the page makes two calls to the stream — each runtime keeps its own
-  state, so neither can see the other — and stops responding within a second.
-  It was worded as untidiness; it is fatal.
+= 0.6.0 =
+* Renamed from its working name, Hypermedia Carousel for Datastar. The block name, CSS classes,
+  option, REST namespace and filters now use the `ulcar` prefix.
+* The stream request no longer carries the page's signals, and is not restarted when the tab is
+  hidden. That could add every slide twice.
+* The console message for a failed stream now gives the HTTP status, and no longer fires for a
+  carousel whose other images were deleted.
+* The editor warns when more than 50 images are picked.
+* On a multisite network, a stream signature is now tied to one site.
 
-Earlier releases: see the repository's history -- this file has a 10 KiB budget,
-so only the current release is kept here.
+Earlier releases: see the repository history.
